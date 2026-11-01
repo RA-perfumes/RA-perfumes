@@ -1,5 +1,5 @@
 // RA Perfumes order receiver — server-side bridge to Google Apps Script.
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzh9DRWIvVrpzC3GU_omcldf4dlzzBj7AWhUCnvysr1rH_f1QTI_fkFtA_6PpBLKH4Vaw/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 const PRICES = {30:399,50:599,100:1299};
 const NAMES = {fresh:'Fresh',arena:'Arena',oud:'Oud'};
 const validText = (v,max) => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= max;
