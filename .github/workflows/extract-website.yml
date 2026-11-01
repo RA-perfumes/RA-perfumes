@@ -1,0 +1,43 @@
+name: Extract RA Perfumes website
+on:
+  push:
+    paths:
+      - 'RA_Perfumes_Source.zip'
+      - '.github/workflows/extract-website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website repository
+        uses: actions/checkout@v4
+      - name: Unpack finalized website source into repository root
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          root = Path('.').resolve()
+          with zipfile.ZipFile('RA_Perfumes_Source.zip') as z:
+              for item in z.infolist():
+                  target = (root / item.filename).resolve()
+                  if not target.is_relative_to(root):
+                      raise ValueError('Unsafe ZIP path')
+                  if item.is_dir():
+                      target.mkdir(parents=True, exist_ok=True)
+                  else:
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      target.write_bytes(z.read(item))
+          PY
+      - name: Commit extracted website files
+        run: |
+          git config user.name "RA Perfumes Site Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish finalized RA Perfumes website assets"
+            git push
+          fi
