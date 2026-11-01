@@ -140,16 +140,43 @@
   function validateName(){nameInput.setCustomValidity(nameInput.value.trim().length>=2?'':'Please enter your full name.');return nameInput.validity.valid}
   function validateMobile(){const value=mobileInput.value.trim(),digits=value.replace(/\D/g,'');const valid=/^\+?[\d\s()-]+$/.test(value)&&digits.length>=10&&digits.length<=15;mobileInput.setCustomValidity(valid?'':'Please enter a valid mobile number, including country code if outside India.');return valid}
   nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));mobileInput.addEventListener('input',()=>mobileInput.setCustomValidity(''));
-  $('#customer-form').addEventListener('submit',event=>{
-    event.preventDefault();if(phoneAuth.enabled && !verifiedPhone)return;if(!bag.length){renderBag();setStep('bag');return}
+  $('#customer-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(phoneAuth.enabled && !verifiedPhone)return;
+    if(!bag.length){$('#order-feedback').textContent='Your bag is empty.';return;}
     validateName();validateMobile();if(!event.currentTarget.reportValidity())return;
-    const customer={name:nameInput.value.trim(),mobile:mobileInput.value.trim(),email:emailInput.value.trim()};
-    orderMessage='Hello RA Perfumes, I would like to order:\n\n'+bag.map(item=>products[item.id].name+' · '+item.size+' ml × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+'\n\nSelection total: '+formatPrice(bagTotal())+'\n\nName: '+customer.name+'\nMobile: '+customer.mobile+'\nEmail: '+customer.email+'\n\nPlease confirm availability and the final total. Thank you.';
     if(!delivery){$('#order-feedback').textContent='Please check your delivery PIN code before continuing.';$('#customer-pin').focus();return;}
-    orderMessage+='\n\nDelivery PIN: '+delivery.pin+'\nState: '+delivery.state+'\nShipping: '+formatPrice(delivery.charge)+'\nOrder total: '+formatPrice(bagTotal()+delivery.charge);
-    if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#order-feedback').textContent='Online ordering is not available yet. Please try again once the store opens ordering.';return;}
-    window.location.assign('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(orderMessage));
+    if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#order-feedback').textContent='Online ordering is temporarily unavailable.';return;}
+    const customer={name:nameInput.value.trim(),mobile:mobileInput.value.trim(),email:emailInput.value.trim()};
+    const button=event.currentTarget.querySelector('button[type="submit"]'),feedback=$('#order-feedback');
+    const orderKey=JSON.stringify({items:bag,pin:delivery.pin,customer});
+    let orderId,previousKey;
+    try{orderId=sessionStorage.getItem('ra-pending-order-id');previousKey=sessionStorage.getItem('ra-pending-order-key')}catch{}
+    if(!orderId || previousKey!==orderKey){
+      orderId='RA-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,8).toUpperCase();
+      try{sessionStorage.setItem('ra-pending-order-id',orderId);sessionStorage.setItem('ra-pending-order-key',orderKey)}catch{}
+    }
+    button.disabled=true;feedback.textContent='Saving your order securely…';
+    try{
+      const result=await fetch('/api/order',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({orderId,...customer,pincode:delivery.pin,items:bag.map(({id,size,qty})=>({id,size,qty}))})
+      });
+      const saved=await result.json();
+      if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
+      orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
+        bag.map(item=>products[item.id].name+' · '+item.size+' ml × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+
+        '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
+        '\nShipping: '+formatPrice(saved.shipping)+'\nOrder total: '+formatPrice(saved.total)+
+        '\n\nName: '+customer.name+'\nMobile: '+customer.mobile+'\nEmail: '+customer.email+
+        '\nDelivery PIN: '+delivery.pin+'\n\nPlease confirm availability. Thank you.';
+      window.location.assign('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(orderMessage));
+    }catch(error){
+      feedback.textContent='We could not save your order. Please try Continue again. No WhatsApp order has been opened.';
+      button.disabled=false;
+    }
   });
+
   function setMood(id){const product=products[id];$('.scent-secret').open=false;$$('.mood-tab').forEach(tab=>{const active=tab.dataset.mood===id;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});const image=$('#mood-image');image.src=product.moodImage;image.alt=product.moodAlt;$('#mood-caption').textContent=product.name+' / '+product.inspiration;$('.mood-description').textContent=product.description;$('.mood-quote').replaceChildren(...product.quote.split('\n').flatMap((line,index)=>index?[document.createElement('br'),document.createTextNode(line)]:[document.createTextNode(line)]));$('.mood-link').dataset.product=id;$('.mood-link>span').textContent='Meet '+product.name;$('#mood-panel').setAttribute('aria-labelledby','mood-'+id)}
   $$('.mood-tab').forEach((tab,index)=>{tab.addEventListener('click',()=>setMood(tab.dataset.mood));tab.addEventListener('keydown',event=>{const tabs=$$('.mood-tab');let next;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();setMood(tabs[next].dataset.mood);tabs[next].focus()})});
 
