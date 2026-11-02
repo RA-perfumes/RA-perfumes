@@ -73,3 +73,24 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 @media(max-width:650px){.house-collection{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.house-collection::-webkit-scrollbar{display:none}.house-card{flex:0 0 73%;scroll-snap-align:start}}
 
 .house-card{background:#281525;color:var(--ink);border:1px solid var(--line)}.house-card strong,.house-card small{color:var(--gold)}.house-card s{color:var(--muted)}.house-card button{border-color:var(--line);color:var(--gold)}.details-page{width:min(100% - 40px,540px);margin:120px auto 64px;color-scheme:dark}.details-page .primary-button{margin-top:20px}.details-page h1{font:42px Editorial,Georgia,serif}
+
+/* RA's discreet promo field and fragrance-spray affordances. */
+.promo-check{margin:4px 0 22px}
+.promo-check label{display:block;color:var(--ink);font-size:11px;margin-bottom:10px}
+.promo-row{display:flex;gap:8px}
+.promo-row input{width:100%;min-width:0;flex:1;height:48px;padding:12px 14px;background:#1b111a;border:1px solid var(--line);border-radius:0;color:var(--ink);font-size:15px;letter-spacing:.07em;text-transform:uppercase}
+.promo-row input::placeholder{letter-spacing:0;text-transform:none;color:var(--muted);opacity:.75}
+.promo-row button{height:48px;min-width:76px;padding:0 18px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-size:11px}
+.promo-row button:hover:not(:disabled){background:var(--gold);color:var(--paper)}
+.promo-row button:disabled{opacity:.55}
+.promo-status{font-size:11px;color:var(--gold);line-height:1.6;margin:7px 0 0}
+.promo-status:empty{display:none}
+.shipping-totals .promo-saving{color:var(--gold)}
+.catalog-card b{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.catalog-card .perfume-disc{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid var(--gold);border-radius:50%;color:var(--gold)}
+.catalog-card .perfume-icon{width:19px;height:23px}
+.catalog-card:hover .perfume-disc{background:var(--gold);color:var(--paper)}
+.house-card button{display:flex;align-items:center;justify-content:center;gap:12px;padding:6px 12px}
+.house-card button .perfume-disc{display:grid;place-items:center;width:32px;height:32px;border:1px solid currentColor;border-radius:50%}
+.house-card button .perfume-icon{width:17px;height:21px}
+@media(max-width:550px){.catalog-card .perfume-disc{width:32px;height:32px}.catalog-card b{font-size:10px}.promo-row button{min-width:72px;padding:0 12px}}
