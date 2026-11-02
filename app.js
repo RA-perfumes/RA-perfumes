@@ -24,8 +24,17 @@
   const itemCount=()=>bag.reduce((sum,item)=>sum+item.qty,0);
   const bagTotal=()=>bag.reduce((sum,item)=>sum+prices[item.size]*item.qty,0);
   let delivery=null,pinRequest=0,pinController=null;
+  let promo=null,promoRequest=0;
   const pinCache=new Map();
-  function totalsHTML(){return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(bagTotal())+'</span></div><div><span>Shipping</span><span>'+(delivery?formatPrice(delivery.charge):'Check PIN code')+'</span></div><div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(bagTotal()+(delivery?.charge||0))+'</strong></div></div>';}
+  function totalsHTML(){
+    const discount=promo?.discount||0;
+    const subtotal=bagTotal();
+    const shipping=delivery?.charge||0;
+    return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
+      '<div><span>Shipping</span><span>'+(delivery?formatPrice(shipping):'Check PIN code')+'</span></div>'+
+      (discount?'<div class="promo-saving"><span>Promo '+promo.code+'</span><span>−'+formatPrice(discount)+'</span></div>':'')+
+      '<div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(subtotal+shipping-discount)+'</strong></div></div>';
+  }
   function renderCheckoutTotals(){$('#checkout-totals').innerHTML=totalsHTML();}
   function refreshDeliveryTotals(){renderCheckoutTotals();if(bagDialog.open&&!$('#bag-step').hidden)renderBag();}
   function pinStatus(text){$$('[data-pin-status]').forEach(el=>el.textContent=text);}
@@ -48,11 +57,39 @@
       const states=[...new Set(usable.map(o=>o.State.trim()))];
       if(states.length!==1){pinStatus('We could not verify this PIN. Check the number and try again.');return;}
       pinCache.set(pin,records);
-      const state=states[0],charge=state.replace(/\s/g,'').toLowerCase()==='tamilnadu'?99:199;
+      const state=states[0],charge=state.replace(/\s/g,'').toLowerCase()==='tamilnadu'?49:149;
       delivery={pin,state,charge};pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
     }catch{if(request===pinRequest)pinStatus('Unable to check availability right now. Please try again.');}
     finally{clearTimeout(timeout);if(request===pinRequest)$$('[data-check-pin]').forEach(el=>el.disabled=false);}
   }));
+  // Promo codes are checked against the private sheet by a server-side Vercel function.
+  const promoInput=$('#promo-code'),promoButton=$('#promo-apply'),promoStatus=$('#promo-status');
+  if(promoInput&&promoButton&&promoStatus){
+    promoInput.addEventListener('input',()=>{
+      promoInput.value=promoInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32);
+      promo=null;promoRequest++;promoStatus.textContent='';
+      renderCheckoutTotals();
+    });
+    promoInput.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();promoButton.click();}});
+    promoButton.addEventListener('click',async()=>{
+      const code=promoInput.value.trim().toUpperCase();
+      if(!/^[A-Z0-9_-]{3,32}$/.test(code)){promoStatus.textContent='Promo code is not valid.';return;}
+      if(!bag.length){promoStatus.textContent='Choose a fragrance before applying a code.';return;}
+      const request=++promoRequest;promoButton.disabled=true;promoStatus.textContent='Checking your code…';
+      try{
+        const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&subtotal='+bagTotal(),{cache:'no-store'});
+        const data=await result.json();
+        if(request!==promoRequest)return;
+        if(!result.ok||data.success!==true){promoStatus.textContent='Promo verification is temporarily unavailable. Please try again.';return;}
+        if(!data.valid){promoStatus.textContent=data.message||'Promo code is not valid.';return;}
+        if(data.code!==code||!Number.isFinite(data.discount)||data.discount<=0||data.discount>bagTotal())throw Error('Invalid response');
+        promo={code,discount:data.discount};
+        promoStatus.textContent='Code applied. You save '+formatPrice(data.discount)+'.';
+        renderCheckoutTotals();
+      }catch{if(request===promoRequest)promoStatus.textContent='Unable to check your code right now. Please try again.';}
+      finally{if(request===promoRequest)promoButton.disabled=false;}
+    });
+  }
   function updateCount(){
     $$('[data-bag-count]').forEach(el=>{el.textContent=itemCount();el.hidden=!itemCount()});
     $$('[data-open-bag]').forEach(el=>el.setAttribute('aria-label','Reserve your bottle, '+itemCount()+' items in your bag'));
@@ -149,7 +186,7 @@
     if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#order-feedback').textContent='Online ordering is temporarily unavailable.';return;}
     const customer={name:nameInput.value.trim(),mobile:mobileInput.value.trim(),email:emailInput.value.trim()};
     const button=event.currentTarget.querySelector('button[type="submit"]'),feedback=$('#order-feedback');
-    const orderKey=JSON.stringify({items:bag,pin:delivery.pin,customer});
+    const orderKey=JSON.stringify({items:bag,pin:delivery.pin,customer,promo:promo?.code||''});
     let orderId,previousKey;
     try{orderId=sessionStorage.getItem('ra-pending-order-id');previousKey=sessionStorage.getItem('ra-pending-order-key')}catch{}
     if(!orderId || previousKey!==orderKey){
@@ -160,19 +197,20 @@
     try{
       const result=await fetch('/api/order',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({orderId,...customer,pincode:delivery.pin,items:bag.map(({id,size,qty})=>({id,size,qty}))})
+        body:JSON.stringify({orderId,...customer,pincode:delivery.pin,promoCode:promo?.code||'',items:bag.map(({id,size,qty})=>({id,size,qty}))})
       });
       const saved=await result.json();
       if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
         bag.map(item=>products[item.id].name+' · '+item.size+' ml × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+
         '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
-        '\nShipping: '+formatPrice(saved.shipping)+'\nOrder total: '+formatPrice(saved.total)+
+        '\nShipping: '+formatPrice(saved.shipping)+
+        (saved.promoCode?'\nPromo '+saved.promoCode+': −'+formatPrice(saved.discount):'')+'\nOrder total: '+formatPrice(saved.total)+
         '\n\nName: '+customer.name+'\nMobile: '+customer.mobile+'\nEmail: '+customer.email+
         '\nDelivery PIN: '+delivery.pin+'\n\nPlease confirm availability. Thank you.';
       window.location.assign('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(orderMessage));
     }catch(error){
-      feedback.textContent='We could not save your order. Please try Continue again. No WhatsApp order has been opened.';
+      feedback.textContent=error?.message && /promo/i.test(error.message)?'Promo code is no longer valid. Please reapply it.':'We could not save your order. Please try Continue again. No WhatsApp order has been opened.';
       button.disabled=false;
     }
   });
