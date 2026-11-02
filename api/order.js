@@ -33,11 +33,27 @@ export default async function handler(req,res){
       .filter(o=>String(o.Pincode)===String(d.pincode)&&o.Country==='India'&&o.State)
       .map(o=>o.State.trim()))];
     if(states.length!==1)return res.status(400).json({success:false,error:'Unable to verify PIN code'});
-    const shipping=states[0].replace(/\s/g,'').toLowerCase()==='tamilnadu'?99:199;
+    const shipping=states[0].replace(/\s/g,'').toLowerCase()==='tamilnadu'?49:149;
+    let promoCode='',discount=0;
+    if(d.promoCode){
+      promoCode=String(d.promoCode).trim().toUpperCase();
+      if(!/^[A-Z0-9_-]{3,32}$/.test(promoCode))return res.status(400).json({success:false,error:'Promo code is not valid'});
+      const validateUrl=new URL(SHEETS_URL);
+      validateUrl.searchParams.set('action','validatePromo');
+      validateUrl.searchParams.set('code',promoCode);
+      validateUrl.searchParams.set('subtotal',String(subtotal));
+      const verification=await fetch(validateUrl,{redirect:'follow',signal:AbortSignal.timeout(13000)});
+      if(!verification.ok)throw Error('Promo service unavailable');
+      const verified=await verification.json();
+      if(verified.success!==true||typeof verified.valid!=='boolean')throw Error('Promo receiver not updated');
+      if(!verified.valid)return res.status(400).json({success:false,error:verified.message||'Promo code is not valid'});
+      discount=Number(verified.discount);
+      if(verified.code!==promoCode||!Number.isFinite(discount)||discount<=0||discount>subtotal)throw Error('Invalid promo discount');
+    }
     const payload={
       name:d.name.trim(),email:d.email.trim(),mobile:d.mobile.trim(),
       orderId:d.orderId.trim(),pincode:String(d.pincode),items:lines.join('; '),
-      subtotal,shipping,total:subtotal+shipping
+      subtotal,shipping,promoCode,discount,total:subtotal+shipping-discount
     };
     const response=await fetch(SHEETS_URL,{
       method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -49,7 +65,7 @@ export default async function handler(req,res){
     if(!response.ok || outcome.success!==true || outcome.orderId!==payload.orderId){
       throw Error(outcome.error||'Unable to save order');
     }
-    return res.status(200).json({success:true,orderId:payload.orderId,total:payload.total,shipping});
+    return res.status(200).json({success:true,orderId:payload.orderId,total:payload.total,shipping,discount,promoCode});
   }catch(error){
     console.error('RA order submission failed:',error.message);
     return res.status(502).json({success:false,error:'Could not save your order. Please try again.'});
