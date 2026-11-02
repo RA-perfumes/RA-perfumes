@@ -67,7 +67,7 @@
   if(promoInput&&promoButton&&promoStatus){
     promoInput.addEventListener('input',()=>{
       promoInput.value=promoInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32);
-      promo=null;promoRequest++;promoStatus.textContent='';
+      promo=null;promoRequest++;promoButton.disabled=false;promoStatus.textContent='';
       renderCheckoutTotals();
     });
     promoInput.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();promoButton.click();}});
