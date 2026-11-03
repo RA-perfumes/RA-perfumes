@@ -94,3 +94,19 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 .house-card button .perfume-disc{display:grid;place-items:center;width:32px;height:32px;border:1px solid currentColor;border-radius:50%}
 .house-card button .perfume-icon{width:17px;height:21px}
 @media(max-width:550px){.catalog-card .perfume-disc{width:32px;height:32px}.catalog-card b{font-size:10px}.promo-row button{min-width:72px;padding:0 12px}}
+
+
+/* Cinematic performance safeguards, without changing RA's art direction. */
+.film-frame>img{opacity:1}
+.hero-stage.video-failed .film-frame>video{opacity:0!important}
+@media(max-width:760px),(pointer:coarse){
+  /* A backdrop blur covering the film is expensive on several mobile GPUs. */
+  .site-header{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .low-power-film .film-frame>video{transition:opacity .2s ease}
+  .band-word{transition:transform .12s ease-out,opacity .12s ease-out}
+}
+@media(prefers-reduced-motion:reduce){
+  .film-frame>video{display:none}
+  .hero-stage .loading-ring{display:none}
+}
+body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}

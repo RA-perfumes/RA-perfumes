@@ -1,0 +1,36 @@
+name: Optimize RA cinematic media
+on:
+  push:
+    branches: [improve-cinematic-performance-nov2026]
+    paths:
+      - '.github/workflows/optimize-cinematic.yml'
+      - 'assets/presence.mp4'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: improve-cinematic-performance-nov2026
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Make scrub-friendly desktop and lightweight mobile films
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -nostdin -y -i assets/presence.mp4 -an -c:v libx264 -preset medium -crf 23 -g 8 -keyint_min 8 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart assets/presence-scrub.mp4
+          ffmpeg -hide_banner -loglevel error -nostdin -y -i assets/presence.mp4 -an -vf 'fps=24,scale=720:-2' -c:v libx264 -preset medium -crf 26 -g 48 -keyint_min 48 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart assets/presence-mobile.mp4
+          ffprobe -v error -show_entries stream=width,height -of compact assets/presence-scrub.mp4
+          ffprobe -v error -show_entries stream=width,height -of compact assets/presence-mobile.mp4
+      - name: Commit optimized videos to preview branch only
+        run: |
+          git config user.name "RA Perfumes Site Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/presence-scrub.mp4 assets/presence-mobile.mp4
+          if ! git diff --cached --quiet; then
+            git commit -m "Add lean mobile and keyframe-optimized desktop video"
+            git pull --rebase origin improve-cinematic-performance-nov2026
+            git push
+          fi
