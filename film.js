@@ -54,7 +54,7 @@
     if(started||failed||!visible||lowResource())return;
     started=true;
     stage.classList.add('is-loading');
-    video.muted=true;video.defaultMuted=true;video.playsInline=true;video.loop=true;
+    video.muted=true;video.defaultMuted=true;video.playsInline=true;video.loop=false;
     video.preload='auto';
     video.src=mobile.matches?'assets/presence-mobile.mp4':'assets/presence-scrub.mp4';
     video.load();
