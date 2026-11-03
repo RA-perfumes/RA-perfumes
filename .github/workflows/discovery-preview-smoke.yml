@@ -1,0 +1,68 @@
+name: Discovery Set Preview Smoke Test
+on:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'the-scent.html'
+      - '.github/workflows/discovery-preview-smoke.yml'
+  workflow_dispatch:
+jobs:
+  browser-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install small headless browser driver
+        run: npm install --no-save --no-package-lock puppeteer-core
+      - name: Test Discovery Set product gallery and cart
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ra-preview-server.log 2>&1 &
+          node <<'JS'
+          const puppeteer=require('puppeteer-core');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const chrome=process.env.CHROME_BIN||'/usr/bin/google-chrome';
+            const browser=await puppeteer.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-setuid-sandbox']});
+            try{
+              const page=await browser.newPage();
+              await page.setViewport({width:390,height:844,isMobile:true,hasTouch:true,deviceScaleFactor:2});
+              const errors=[];
+              page.on('pageerror',error=>errors.push(error.message));
+              const root='http://127.0.0.1:8765/the-scent.html';
+              await page.goto(root,{waitUntil:'load'});
+              await page.waitForSelector('#discovery-set');
+              await page.click('#discovery-set');
+              await page.waitForFunction(()=>location.search.includes('scent=discovery'));
+              await page.waitForFunction(()=>{
+                const shop=document.querySelector('.scent-shop');
+                const gal=document.querySelector('#discovery-gallery');
+                return shop&&!shop.hidden&&gal&&!gal.hidden;
+              });
+              await page.waitForFunction(()=>document.querySelector('#discovery-gallery-track img').naturalWidth>0);
+              const details=await page.evaluate(()=>({
+                total:document.querySelector('#product-price')?.textContent,
+                original:document.querySelector('#product-original')?.textContent,
+                photos:document.querySelectorAll('.discovery-gallery-panel img').length,
+                galleryHeight:document.querySelector('#discovery-gallery').getBoundingClientRect().height,
+                noCount:document.querySelector('.scent-switch').hidden
+              }));
+              assert.equal(details.total,'₹199');
+              assert.equal(details.original,'₹399');
+              assert.equal(details.photos,4);
+              assert(details.galleryHeight>200,'gallery should be visible');
+              assert(details.noCount,'numbered scent-switch should be hidden');
+              await page.click('[data-gallery-step="1"]');
+              await page.waitForFunction(()=>document.querySelector('[data-gallery-to="1"]').getAttribute('aria-pressed')==='true');
+              const pos=await page.$eval('#discovery-gallery-track',el=>el.scrollLeft);
+              assert(pos>100,'gallery should slide');
+              await page.click('#add-selection');
+              await page.waitForSelector('#bag-dialog[open]');
+              assert.equal(errors.length,0,'uncaught browser errors: '+errors.join('; '));
+              console.log('PASS Discovery Set: opens, four slides show, arrow works, prices correct, bag opens');
+            }finally{await browser.close()}
+          })().catch(err=>{console.error(err);process.exitCode=1});
+          JS
