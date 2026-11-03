@@ -10,7 +10,7 @@
   // Contact details stay local until Continue opens the business WhatsApp chat.
   const WHATSAPP_NUMBER='918939429631';
   const products={
-    discovery:{name:'Discovery Set',image:'assets/discovery-set.jpg',story:'Three distinctive expressions of RA Perfumes, together for your first discovery.',description:'Fresh, Arena & Oud · 3 × 10 ml'},
+    discovery:{name:'Discovery Set',image:'assets/ra-mark.webp',story:'Three distinctive expressions of RA Perfumes, together for your first discovery.',description:'Fresh, Arena & Oud · 3 × 10 ml'},
     fresh:{name:'Fresh',image:'assets/fresh-clear.webp',moodImage:'assets/sweet-lime.webp',moodAlt:'Sweet lime on dark stone with ivory silk',inspiration:'Sweet lime',description:'Sweet lime sets the mood. The rest is a quiet secret, made personal by the way you wear it.',story:'A sunlit orchard. The delicate brightness of sweet lime. Fresh is an invitation to begin again, with an ivory-light elegance that feels entirely your own.',quote:'Sweet lime in the morning light.\nA little radiance, just for you.'},
     arena:{name:'Arena',image:'assets/arena-clear.webp',moodImage:'assets/blackcurrant-amber.webp',moodAlt:'Blackcurrants, ruby silk and glowing amber resin',inspiration:'Blackcurrant & amber',description:'Blackcurrant and amber inspire a darker mood. Some impressions are better felt than explained.',story:'The evening turns a deeper shade. Inspired by blackcurrant and the glow of amber, Arena imagines a world of ruby light and unhurried closeness. For nights that deserve their own signature.',quote:'Dark fruit. Warm amber.\nAn invitation to come closer.'},
     oud:{name:'Oud',image:'assets/oud-clear.webp',moodImage:'assets/notes-wood.webp',moodAlt:'Natural wood textures, an earthy fragrance inspiration',inspiration:'Oud & warm woods',description:'Warm woods. A golden stillness. A fragrance mood that keeps its most personal secrets close.',story:'Warm wood. Golden light. A moment held in stillness. Oud evokes a measured, assured elegance, for those drawn to depth and the pleasure of taking their time.',quote:'The warmth of wood.\nThe quiet confidence of gold.'}
@@ -114,6 +114,7 @@
     $('#product-image').src=product.image;
     $('#product-image').alt=id==='discovery'?'RA Perfumes Discovery Set: Fresh, Arena and Oud, three 10 ml bottles':product.name+' by RA Perfumes, minimal transparent glass bottle';
     const isSet=id==='discovery';
+    $('.product-art',productDialog).classList.toggle('is-discovery',isSet);
     $('.sizes',productDialog).hidden=isSet;
     $('#product-original').hidden=isSet;
     if(isSet){currentSize=30;$('#product-price').textContent=formatPrice(199);$('#product-size-caption').textContent='3 × 10 ml';}
