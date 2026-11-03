@@ -105,6 +105,44 @@
     dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()});
   });
   $$('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
+  // Discovery Set: native scroll-snap gallery with independent product navigation.
+  const discoveryGallery=$('#discovery-gallery');
+  const galleryTrack=$('#discovery-gallery-track');
+  let galleryIndex=0,galleryScrollFrame=0;
+  const galleryButtons=discoveryGallery?$('[data-gallery-to]',discoveryGallery):[];
+  function markGallery(index){
+    galleryIndex=Math.max(0,Math.min(3,index));
+    galleryButtons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===galleryIndex)));
+    if(discoveryGallery){
+      const prev=$('[data-gallery-step="-1"]',discoveryGallery);
+      const next=$('[data-gallery-step="1"]',discoveryGallery);
+      if(prev)prev.disabled=galleryIndex===0;
+      if(next)next.disabled=galleryIndex===3;
+    }
+  }
+  function goToGallery(index,animate=true){
+    if(!galleryTrack)return;
+    markGallery(index);
+    galleryTrack.scrollTo({left:galleryIndex*galleryTrack.clientWidth,behavior:animate&&!reduce.matches?'smooth':'auto'});
+  }
+  if(discoveryGallery&&galleryTrack){
+    $('[data-gallery-step]',discoveryGallery).forEach(button=>button.addEventListener('click',()=>goToGallery(galleryIndex+Number(button.dataset.galleryStep))));
+    galleryButtons.forEach(button=>button.addEventListener('click',()=>goToGallery(Number(button.dataset.galleryTo))));
+    galleryTrack.addEventListener('scroll',()=>{
+      if(galleryScrollFrame)return;
+      galleryScrollFrame=requestAnimationFrame(()=>{
+        galleryScrollFrame=0;
+        if(galleryTrack.clientWidth>0)markGallery(Math.round(galleryTrack.scrollLeft/galleryTrack.clientWidth));
+      });
+    },{passive:true});
+    galleryTrack.addEventListener('keydown',event=>{
+      if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+        event.preventDefault();
+        goToGallery(galleryIndex+(event.key==='ArrowRight'?1:-1));
+      }
+    });
+    markGallery(0);
+  }
   function setSize(size){currentSize=Number(size);$$('.size-option').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.size)===currentSize)));$('#product-price').textContent=formatPrice(prices[currentSize]);$('#product-original').textContent=formatPrice(originalPrices[currentSize]);$('#product-size-caption').textContent=currentSize+' ml'}
   function showProduct(id){
     const product=products[id];if(!product)return;
@@ -116,9 +154,18 @@
     const isSet=id==='discovery';
     $('.product-art',productDialog).classList.toggle('is-discovery',isSet);
     $('.sizes',productDialog).hidden=isSet;
-    $('#product-original').hidden=isSet;
-    if(isSet){currentSize=30;$('#product-price').textContent=formatPrice(199);$('#product-size-caption').textContent='3 × 10 ml';}
-    else setSize(50);
+    const image=$('#product-image');
+    if(image)image.hidden=isSet;
+    if(discoveryGallery)discoveryGallery.hidden=!isSet;
+    if(shop){const navigation=$('.scent-switch');if(navigation)navigation.hidden=isSet;}
+    $('#product-original').hidden=false;
+    if(isSet){
+      currentSize=30;
+      $('#product-original').textContent=formatPrice(399);
+      $('#product-price').textContent=formatPrice(199);
+      $('#product-size-caption').textContent='3 × 10 ml';
+      if(galleryTrack){galleryTrack.scrollLeft=0;markGallery(0);}
+    }else setSize(50);
     if(!shop)openDialog(productDialog);
   }
   document.addEventListener('click',event=>{const button=event.target.closest('[data-product]');if(button)location.href='the-scent.html?scent='+button.dataset.product});
@@ -257,6 +304,7 @@
     art.addEventListener('touchstart', e => { start = e.touches[0]; }, {passive:true});
     art.addEventListener('touchend', e => {
       if (!start) return;
+      if (currentProduct==='discovery') { start=null; return; }
       const end = e.changedTouches[0], dx = end.clientX - start.clientX;
       if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(end.clientY - start.clientY)) selectFragrance(dx < 0 ? 1 : -1);
       start = null;
