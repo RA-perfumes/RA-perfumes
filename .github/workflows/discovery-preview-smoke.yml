@@ -57,6 +57,7 @@ jobs:
               assert(details.noCount,'numbered scent-switch should be hidden');
               await page.click('[data-gallery-step="1"]');
               await page.waitForFunction(()=>document.querySelector('[data-gallery-to="1"]').getAttribute('aria-pressed')==='true');
+              await page.waitForFunction(()=>document.querySelector('#discovery-gallery-track').scrollLeft>100,{timeout:5000});
               const pos=await page.$eval('#discovery-gallery-track',el=>el.scrollLeft);
               assert(pos>100,'gallery should slide');
               await page.click('#add-selection');
