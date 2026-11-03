@@ -95,48 +95,10 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 .house-card button .perfume-icon{width:17px;height:21px}
 @media(max-width:550px){.catalog-card .perfume-disc{width:32px;height:32px}.catalog-card b{font-size:10px}.promo-row button{min-width:72px;padding:0 12px}}
 
-/* RA Discovery Set: editorial introduction and full catalog feature. */
-.discovery-teaser{max-width:1250px;margin:30px auto 130px;padding:clamp(24px,4vw,52px);display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:clamp(25px,5vw,75px);border:1px solid var(--line);background:linear-gradient(120deg,#251421,#3b1c2f)}
-.discovery-teaser h2,.discovery-set-copy h2{font:clamp(44px,5.2vw,76px)/1.08 Editorial,Georgia,serif;letter-spacing:-.05em;margin:24px 0}
-.discovery-teaser h2 em,.discovery-set-copy h2 em{color:var(--gold);font-weight:400}
-.discovery-teaser-copy>p:not(.discovery-teaser-price){font-size:13px;line-height:1.95;max-width:39ch;color:var(--muted)}
-.discovery-teaser-price{display:flex;align-items:baseline;gap:22px;margin:25px 0;color:var(--muted);font-size:12px}
-.discovery-teaser-price strong{font-size:31px;font-weight:400;color:var(--gold)}
-.discovery-teaser .text-link{color:var(--gold);gap:20px}
-.discovery-teaser-photo{display:block;overflow:hidden;border:1px solid #d9b47739;background:#20101a}
-.discovery-teaser-photo img{width:100%;aspect-ratio:1/1;object-fit:cover;transition:transform .8s var(--ease)}
-.discovery-teaser-photo:hover img{transform:scale(1.025)}
-.discovery-feature{display:grid;grid-template-columns:1fr 1fr;column-gap:clamp(22px,4vw,64px);align-items:center;margin:40px 0 70px;padding:clamp(18px,3vw,42px);border:1px solid #d9b47757;background:linear-gradient(135deg,#311725,#261722 75%)}
-.discovery-set-photo{overflow:hidden;border:1px solid #d9b47733;background:#1b0e17}
-.discovery-set-photo img{width:100%;aspect-ratio:1;object-fit:cover}
-.discovery-set-copy{padding:12px 0}
-.discovery-set-copy h2{margin:17px 0 24px}
-.discovery-set-copy>p:not(.eyebrow):not(.discovery-set-contents):not(.detail-small){max-width:53ch;font-size:13px;color:var(--muted);line-height:1.95}
-.discovery-set-contents{font-size:11px;letter-spacing:.17em;color:var(--gold);margin:24px 0 18px}
-.discovery-set-contents span{padding:0 8px;color:var(--muted)}
-.discovery-set-price{border-top:1px solid var(--line);padding:17px 0 20px;display:flex;align-items:baseline;flex-wrap:wrap;gap:10px 23px}
-.discovery-set-price strong{font-size:38px;font-weight:400;color:var(--gold)}
-.discovery-set-price span{font-size:11px;color:var(--muted)}
-.discovery-set-copy .primary-button{width:100%;max-width:370px}
-.discovery-set-copy .detail-small{font-size:10px}
-.discovery-bottles{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(9px,2vw,22px);border-top:1px solid var(--line);margin-top:clamp(20px,4vw,45px);padding-top:clamp(18px,3vw,36px)}
-.discovery-bottles figure{margin:0;min-width:0}
-.discovery-bottles img{width:100%;aspect-ratio:1/1;object-fit:cover;border:1px solid #d9b47728}
-.discovery-bottles figcaption{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:2px 10px;margin-top:13px}
-.discovery-bottles figcaption strong{font:clamp(21px,2.3vw,32px) Editorial,Georgia,serif;font-weight:400}
-.discovery-bottles figcaption span{font-size:10px;color:var(--muted)}
-#discovery-set{scroll-margin-top:115px}
-@media(max-width:760px){
-  .discovery-teaser{grid-template-columns:1fr;margin:0 5vw 90px;padding:24px;gap:27px}
-  .discovery-teaser h2,.discovery-set-copy h2{font-size:clamp(40px,11vw,58px)}
-  .discovery-teaser-photo{max-width:520px}
-  .discovery-feature{grid-template-columns:1fr;padding:16px;margin:22px 0 50px}
-  .discovery-set-copy{padding:25px 5px 0}
-  .discovery-set-price strong{font-size:35px}
-  .discovery-bottles{grid-column:1;padding-top:18px;margin-top:27px;gap:8px}
-  .discovery-bottles figcaption{display:block}
-  .discovery-bottles figcaption strong{font-size:20px}
-  .discovery-bottles figcaption span{display:block;font-size:9px}
-  #discovery-set{scroll-margin-top:92px}
-}
-@media(prefers-reduced-motion:reduce){.discovery-teaser-photo img{transition:none}}
+/* Fourth collection item; identical card language, no separate product gallery. */
+.collection-note a{color:var(--gold);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.catalog-card#discovery-set{scroll-margin-top:105px}
+.catalog-card#discovery-set img{aspect-ratio:1;object-fit:cover}
+@media(min-width:1100px){.catalog-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:701px) and (max-width:1099px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.catalog-card#discovery-set{scroll-margin-top:90px}}
