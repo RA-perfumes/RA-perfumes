@@ -21,8 +21,8 @@ export default async function handler(req,res){
       if(!Object.hasOwn(NAMES,item.id) || !Object.hasOwn(PRICES,size) || (item.id==='discovery'&&size!==30) || !Number.isInteger(qty) || qty<1 || qty>99){
         return res.status(400).json({success:false,error:'Invalid fragrance selection'});
       }
-      subtotal += PRICES[size]*qty;
-      lines.push(NAMES[item.id]+' '+size+'ml x '+qty);
+      subtotal += (item.id==='discovery'?199:PRICES[size])*qty;
+      lines.push(NAMES[item.id]+' '+(item.id==='discovery'?'3 x 10ml':size+'ml')+' x '+qty);
     }
     if(subtotal>1000000)return res.status(400).json({success:false,error:'Order amount too high'});
     // Confirm state on the server: don't trust a browser-provided shipping fee.
