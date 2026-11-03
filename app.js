@@ -109,7 +109,7 @@
   const discoveryGallery=$('#discovery-gallery');
   const galleryTrack=$('#discovery-gallery-track');
   let galleryIndex=0,galleryScrollFrame=0;
-  const galleryButtons=discoveryGallery?$('[data-gallery-to]',discoveryGallery):[];
+  const galleryButtons=discoveryGallery?$$('[data-gallery-to]',discoveryGallery):[];
   function markGallery(index){
     galleryIndex=Math.max(0,Math.min(3,index));
     galleryButtons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===galleryIndex)));
@@ -126,7 +126,7 @@
     galleryTrack.scrollTo({left:galleryIndex*galleryTrack.clientWidth,behavior:animate&&!reduce.matches?'smooth':'auto'});
   }
   if(discoveryGallery&&galleryTrack){
-    $('[data-gallery-step]',discoveryGallery).forEach(button=>button.addEventListener('click',()=>goToGallery(galleryIndex+Number(button.dataset.galleryStep))));
+    $$('[data-gallery-step]',discoveryGallery).forEach(button=>button.addEventListener('click',()=>goToGallery(galleryIndex+Number(button.dataset.galleryStep))));
     galleryButtons.forEach(button=>button.addEventListener('click',()=>goToGallery(Number(button.dataset.galleryTo))));
     galleryTrack.addEventListener('scroll',()=>{
       if(galleryScrollFrame)return;
