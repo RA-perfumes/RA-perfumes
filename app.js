@@ -205,7 +205,7 @@
       const saved=await result.json();
       if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
-        bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+
+        bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(itemPrice(item)*item.qty)).join('\n\n')+
         '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
         '\nShipping: '+formatPrice(saved.shipping)+
         (saved.promoCode?'\nPromo '+saved.promoCode+': −'+formatPrice(saved.discount):'')+'\nOrder total: '+formatPrice(saved.total)+
