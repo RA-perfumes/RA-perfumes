@@ -1,29 +1,132 @@
+/* RA Perfumes cinematic journey: stream the film, avoid costly mobile seeking. */
 (() => {
-'use strict';
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const clamp=(v,min=0,max=1)=>Math.max(min,Math.min(max,v));
-const smooth=v=>{v=clamp(v);return v*v*(3-2*v)};
-    // A single paused film follows the scroll. All seeks are coalesced.
-    const hero=$('.hero'),stage=$('.hero-stage'),video=$('#scrub-video'),bands=$$('.band');
-    const gates=['(prefers-reduced-motion: reduce)'];
-    const queries=gates.map(q=>matchMedia(q));
-    let scrubOn=false,started=false,ready=false,failed=false,raf=null,target=0,shown=0,lastTick=0,visible=true,seeking=false,pending=null,seekTimer=null,lastChapter='',lastProgress=-1,lastScale=-1,blobURL=null,loadController=null;
-    const cache=bands.map(()=>({o:-1,k:-1,active:null}));
-    function heroProgress(){return clamp(-hero.getBoundingClientRect().top/Math.max(1,hero.offsetHeight-innerHeight))}
-    function renderBands(p){const ramp=.035;let active=0;bands.forEach((b,i)=>{const a=Number(b.dataset.start),z=Number(b.dataset.end);const o=(i===0?1:smooth((p-a)/ramp))*(i===2?1:1-smooth((p-(z-ramp))/ramp));const k=i===0?1:smooth((p-a)/ramp);if(Math.abs(cache[i].o-o)>.005){b.style.opacity=o.toFixed(3);b.style.setProperty("--band-opacity",o.toFixed(3));cache[i].o=o}if(Math.abs(cache[i].k-k)>.005){b.style.setProperty('--k',k.toFixed(3));cache[i].k=k}const on=o>.5;if(on)active=i;if(cache[i].active!==on){b.setAttribute('aria-hidden',String(!on));b.inert=!on;cache[i].active=on}});const chapter=String(active+1).padStart(2,'0');if(chapter!==lastChapter){const label=$('#chapter-number');if(label)label.textContent=chapter;lastChapter=chapter}if(Math.abs(lastProgress-p)>.002){stage.style.setProperty('--progress',p.toFixed(3));lastProgress=p}const scale=1+p*.035;if(Math.abs(lastScale-scale)>.001){stage.style.setProperty('--frame-scale',scale.toFixed(3));lastScale=scale}}
-    function releaseSeek(){seeking=false;clearTimeout(seekTimer);if(pending!==null){const n=pending;pending=null;requestSeek(n)}}
-    function requestSeek(t){if(!ready||!Number.isFinite(video.duration)||!scrubOn)return;t=clamp(t,0,Math.max(0,video.duration-.04));if(seeking){pending=t;return}if(Math.abs(video.currentTime-t)<.018)return;seeking=true;try{video.currentTime=t;clearTimeout(seekTimer);seekTimer=setTimeout(releaseSeek,1200)}catch{seeking=false;pending=null}}
-    video.addEventListener('seeked',releaseSeek);
-    function stop(){if(raf!==null)cancelAnimationFrame(raf);raf=null;lastTick=0}
-    function tick(now){if(!scrubOn||!visible||document.hidden){stop();return}const dt=Math.min(100,now-(lastTick||now-16.667));lastTick=now;shown+=(target-shown)*(1-Math.pow(1-.16,dt/16.667));const settled=Math.abs(target-shown)<.0004;if(settled)shown=target;renderBands(shown);if(ready)requestSeek(shown*video.duration);if(settled){raf=null;lastTick=0}else raf=requestAnimationFrame(tick)}
-    function scroll(){if(!scrubOn)return;target=heroProgress();if(raf===null&&visible&&!document.hidden)raf=requestAnimationFrame(tick)}
-    function failVideo(){failed=true;ready=false;seeking=false;pending=null;clearTimeout(seekTimer);stage.classList.remove('is-loading','video-ready');video.removeAttribute('src');stage.classList.add('video-failed');applyMode()}
-    video.addEventListener('error',failVideo);
-    async function loadVideo(){if(started)return;started=true;stage.classList.add('is-loading');loadController=new AbortController();let watchdog=setTimeout(()=>loadController.abort(),20000);try{const response=await fetch('assets/presence.mp4',{signal:loadController.signal,priority:'low'});if(!response.ok)throw new Error('Film unavailable');const total=Number(response.headers.get('Content-Length'))||2600000;let got=0;const chunks=[];if(response.body){const reader=response.body.getReader();for(;;){const part=await reader.read();if(part.done)break;clearTimeout(watchdog);watchdog=setTimeout(()=>loadController.abort(),20000);chunks.push(part.value);got+=part.value.length;stage.style.setProperty('--loading',String(100*(1-clamp(got/total))))}}else chunks.push(await response.arrayBuffer());clearTimeout(watchdog);blobURL=URL.createObjectURL(new Blob(chunks,{type:'video/mp4'}));video.addEventListener('loadeddata',()=>{ready=true;stage.classList.remove('is-loading');stage.classList.add('video-ready');target=heroProgress();shown=target;renderBands(shown);requestSeek(shown*video.duration)},{once:true});video.src=blobURL;video.load()}catch{clearTimeout(watchdog);if(!loadController.signal.aborted||scrubOn)failVideo()}}
-    function applyMode(){const on=!queries.some(q=>q.matches)&&!failed;document.body.classList.toggle('static-hero',!on);if(on){if(!scrubOn){scrubOn=true;addEventListener('scroll',scroll,{passive:true});cache.forEach(c=>{c.o=-1;c.k=-1;c.active=null});loadVideo()}target=heroProgress();shown=target;renderBands(shown);scroll()}else{scrubOn=false;removeEventListener('scroll',scroll);stop();bands.forEach((b,i)=>{b.style.opacity=i===0?'1':'0';b.style.setProperty('--k','1');b.inert=i!==0;b.setAttribute('aria-hidden',String(i!==0))});stage.style.setProperty('--frame-scale','1');stage.style.setProperty('--progress','0');video.pause()}}
-    queries.forEach(q=>q.addEventListener('change',applyMode));addEventListener('resize',scroll,{passive:true});
-    new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)scroll();else stop()},{threshold:0}).observe(hero);
-    document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('paused',document.hidden);if(document.hidden){stop()}else scroll()});
-    addEventListener('pagehide',()=>{if(blobURL)URL.revokeObjectURL(blobURL)});
-    applyMode();
+  'use strict';
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const hero=$('.hero'),stage=$('.hero-stage'),video=$('#scrub-video'),bands=$$('.hero .band');
+  if(!hero||!stage||!video||!bands.length)return;
+  const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+  const smooth=v=>{v=clamp(v);return v*v*(3-2*v)};
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)'),coarse=matchMedia('(pointer: coarse)');
+  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  const cache=bands.map(()=>({o:-1,k:-1,active:null}));
+  let mode='static',visible=false,loaded=false,ready=false,broken=false,raf=0;
+  let shown=0,target=0,lastTick=0,seeking=false,pending=null,seekTimer=0,pendingTimer=0;
+  let lastSeek=0,stalls=0,watchdog=0;
+  const constrained=()=>reduce.matches||!!(connection&&(connection.saveData||['slow-2g','2g'].includes(connection.effectiveType)))||(typeof navigator.deviceMemory==='number'&&navigator.deviceMemory<=2);
+  const choice=()=>broken||constrained()?'static':coarse.matches||innerWidth<=760?'play':'scrub';
+  const progress=()=>clamp(-hero.getBoundingClientRect().top/Math.max(1,hero.offsetHeight-innerHeight));
+  const gap=()=>navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4?140:90;
+  function render(p){
+    const ramp=.045;let active=0;
+    bands.forEach((b,i)=>{
+      const a=Number(b.dataset.start),z=Number(b.dataset.end);
+      const o=(i===0?1:smooth((p-a)/ramp))*(i===bands.length-1?1:1-smooth((p-(z-ramp))/ramp));
+      const k=i===0?1:smooth((p-a)/ramp);
+      if(Math.abs(cache[i].o-o)>.01){b.style.opacity=o.toFixed(3);cache[i].o=o}
+      if(Math.abs(cache[i].k-k)>.015){b.style.setProperty('--k',k.toFixed(3));cache[i].k=k}
+      const on=o>.5;if(on)active=i;
+      if(cache[i].active!==on){b.setAttribute('aria-hidden',String(!on));b.inert=!on;cache[i].active=on}
+    });
+    const label=$('#chapter-number'),chapter=String(active+1).padStart(2,'0');
+    if(label&&label.textContent!==chapter)label.textContent=chapter;
+  }
+  function stop(){if(raf)cancelAnimationFrame(raf);raf=0;lastTick=0}
+  function fail(){
+    if(broken)return;
+    broken=true;clearTimeout(watchdog);clearTimeout(seekTimer);clearTimeout(pendingTimer);
+    seeking=false;pending=null;stage.classList.remove('is-loading','video-ready');stage.classList.add('video-failed');
+    try{video.pause();video.removeAttribute('src');video.load()}catch{}
+    apply();
+  }
+  function seek(t){
+    if(!ready||mode!=='scrub'||!visible||document.hidden||!Number.isFinite(video.duration))return;
+    t=clamp(t,0,Math.max(0,video.duration-.055));
+    if(Math.abs(video.currentTime-t)<.09)return;
+    if(seeking){pending=t;return}
+    const now=performance.now(),delay=gap()-(now-lastSeek);
+    if(delay>0){
+      pending=t;clearTimeout(pendingTimer);
+      pendingTimer=setTimeout(()=>{const latest=pending;pending=null;if(latest!==null)seek(latest)},Math.max(16,delay));
+      return;
+    }
+    seeking=true;lastSeek=now;
+    try{
+      video.currentTime=t;
+      clearTimeout(seekTimer);
+      seekTimer=setTimeout(()=>{seeking=false;if(++stalls>=3)fail();else flush()},1100);
+    }catch{seeking=false;if(++stalls>=3)fail();else flush()}
+  }
+  function flush(){
+    clearTimeout(seekTimer);
+    if(pending!==null&&mode==='scrub'){const latest=pending;pending=null;seek(latest)}
+  }
+  video.addEventListener('seeked',()=>{seeking=false;stalls=0;flush()});
+  video.addEventListener('error',()=>{if(loaded&&!broken)fail()});
+  video.addEventListener('stalled',()=>{if(mode==='play')stage.classList.remove('video-ready')});
+  video.addEventListener('playing',()=>{if(mode==='play')stage.classList.add('video-ready')});
+  video.addEventListener('loadedmetadata',()=>{
+    clearTimeout(watchdog);stage.classList.remove('is-loading');
+    if(mode==='scrub'&&video.readyState>=2){ready=true;stage.classList.add('video-ready');seek(shown*video.duration)}
+  });
+  video.addEventListener('loadeddata',()=>{
+    ready=true;clearTimeout(watchdog);stage.classList.remove('is-loading');
+    if(mode==='scrub'){stage.classList.add('video-ready');seek(shown*video.duration)}
+    else if(mode==='play')play();
+  });
+  async function play(){
+    if(mode!=='play'||!visible||document.hidden||!loaded)return;
+    video.loop=true;video.muted=true;video.playsInline=true;
+    try{await video.play()}catch{stage.classList.remove('video-ready');if(video.readyState<2)fail()}
+  }
+  function load(){
+    if(loaded||broken||mode==='static'||!visible)return;
+    loaded=true;stage.classList.add('is-loading');
+    video.preload=mode==='play'?'auto':'metadata';video.muted=true;video.playsInline=true;
+    // Browser-native streaming supports HTTP ranges and avoids duplicate Blob memory.
+    video.src='assets/presence.mp4';video.load();
+    watchdog=setTimeout(()=>{stage.classList.remove('is-loading');if(!ready&&mode!=='static')fail()},12000);
+  }
+  function tick(now){
+    raf=0;if(mode==='static'||!visible||document.hidden)return;
+    const dt=clamp(now-(lastTick||now-16),0,80);lastTick=now;
+    target=progress();shown+=(target-shown)*(1-Math.pow(.76,dt/16.7));
+    if(Math.abs(target-shown)<.0006)shown=target;
+    render(shown);
+    if(mode==='scrub'&&ready)seek(shown*video.duration);
+    if(shown!==target)raf=requestAnimationFrame(tick);else lastTick=0;
+  }
+  function scroll(){if(mode!=='static'&&visible&&!document.hidden&&!raf)raf=requestAnimationFrame(tick)}
+  function apply(){
+    const next=choice(),changed=next!==mode;mode=next;
+    document.body.classList.toggle('static-hero',mode==='static');
+    document.body.classList.toggle('low-power-film',mode==='play');
+    if(mode==='static'){
+      stop();try{video.pause()}catch{}
+      clearTimeout(seekTimer);stage.classList.remove('is-loading','video-ready');
+      bands.forEach((b,i)=>{b.style.opacity=i?'0':'1';b.style.setProperty('--k','1');b.inert=i!==0;b.setAttribute('aria-hidden',String(i!==0))});
+      return;
+    }
+    if(changed){
+      stop();cache.forEach(c=>{c.o=-1;c.k=-1;c.active=null});
+      if(mode==='scrub'){try{video.pause()}catch{}}
+    }
+    shown=target=progress();render(shown);
+    if(visible){load();if(mode==='play')play();else if(ready)seek(shown*video.duration)}
+    scroll();
+  }
+  addEventListener('scroll',scroll,{passive:true});
+  addEventListener('resize',()=>{apply();scroll()},{passive:true});
+  if(connection?.addEventListener)connection.addEventListener('change',apply);
+  reduce.addEventListener('change',apply);coarse.addEventListener('change',apply);
+  new IntersectionObserver(entries=>{
+    visible=entries[0].isIntersecting;
+    if(visible){load();if(mode==='play')play();scroll()}
+    else{stop();try{video.pause()}catch{}}
+  },{threshold:0,rootMargin:'120px 0px'}).observe(hero);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){stop();try{video.pause()}catch{}}
+    else{if(mode==='play')play();scroll()}
+  });
+  addEventListener('pagehide',()=>{stop();clearTimeout(watchdog);clearTimeout(seekTimer);clearTimeout(pendingTimer)});
+  apply();
 })();
