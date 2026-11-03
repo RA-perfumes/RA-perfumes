@@ -10,6 +10,7 @@
   // Contact details stay local until Continue opens the business WhatsApp chat.
   const WHATSAPP_NUMBER='918939429631';
   const products={
+    discovery:{name:'Discovery Set',image:'assets/discovery-set.jpg',story:'Three distinctive expressions of RA Perfumes, together for your first discovery.',description:'Fresh, Arena & Oud · 3 × 10 ml'},
     fresh:{name:'Fresh',image:'assets/fresh-clear.webp',moodImage:'assets/sweet-lime.webp',moodAlt:'Sweet lime on dark stone with ivory silk',inspiration:'Sweet lime',description:'Sweet lime sets the mood. The rest is a quiet secret, made personal by the way you wear it.',story:'A sunlit orchard. The delicate brightness of sweet lime. Fresh is an invitation to begin again, with an ivory-light elegance that feels entirely your own.',quote:'Sweet lime in the morning light.\nA little radiance, just for you.'},
     arena:{name:'Arena',image:'assets/arena-clear.webp',moodImage:'assets/blackcurrant-amber.webp',moodAlt:'Blackcurrants, ruby silk and glowing amber resin',inspiration:'Blackcurrant & amber',description:'Blackcurrant and amber inspire a darker mood. Some impressions are better felt than explained.',story:'The evening turns a deeper shade. Inspired by blackcurrant and the glow of amber, Arena imagines a world of ruby light and unhurried closeness. For nights that deserve their own signature.',quote:'Dark fruit. Warm amber.\nAn invitation to come closer.'},
     oud:{name:'Oud',image:'assets/oud-clear.webp',moodImage:'assets/notes-wood.webp',moodAlt:'Natural wood textures, an earthy fragrance inspiration',inspiration:'Oud & warm woods',description:'Warm woods. A golden stillness. A fragrance mood that keeps its most personal secrets close.',story:'Warm wood. Golden light. A moment held in stillness. Oud evokes a measured, assured elegance, for those drawn to depth and the pleasure of taking their time.',quote:'The warmth of wood.\nThe quiet confidence of gold.'}
@@ -19,10 +20,12 @@
   const focusOrigins=new WeakMap();
   try{
     const saved=JSON.parse(localStorage.getItem('ra-presence-selection')||'[]');
-    if(Array.isArray(saved))bag=saved.filter(item=>item&&Object.hasOwn(products,item.id)&&Object.hasOwn(prices,item.size)&&Number.isInteger(item.qty)&&item.qty>0&&item.qty<=99).map(item=>({id:item.id,size:Number(item.size),qty:item.qty}));
+    if(Array.isArray(saved))bag=saved.filter(item=>item&&Object.hasOwn(products,item.id)&&Object.hasOwn(prices,item.size)&&(item.id!=='discovery'||Number(item.size)===30)&&Number.isInteger(item.qty)&&item.qty>0&&item.qty<=99).map(item=>({id:item.id,size:Number(item.size),qty:item.qty}));
   }catch{}
   const itemCount=()=>bag.reduce((sum,item)=>sum+item.qty,0);
-  const bagTotal=()=>bag.reduce((sum,item)=>sum+prices[item.size]*item.qty,0);
+  const itemPrice=item=>item.id==='discovery'?199:prices[item.size];
+  const itemSizeLabel=item=>item.id==='discovery'?'3 × 10 ml':item.size+' ml';
+  const bagTotal=()=>bag.reduce((sum,item)=>sum+itemPrice(item)*item.qty,0);
   let delivery=null,pinRequest=0,pinController=null;
   let promo=null,promoRequest=0;
   const pinCache=new Map();
@@ -121,7 +124,7 @@
     addBottle(currentProduct, currentSize, event.currentTarget);
   });
   $$('[data-quick-add]').forEach(button => {
-    button.addEventListener('click', () => addBottle(button.dataset.quickAdd, 50, button));
+    button.addEventListener('click', () => addBottle(button.dataset.quickAdd, button.dataset.quickAdd==='discovery'?30:50, button));
   });
   function setStep(step,focus=true){
     ['bag','details'].forEach(name=>{const panel=bagDialog.querySelector('#'+name+'-step');if(panel)panel.hidden=name!==step;});
@@ -138,7 +141,7 @@
     bag.forEach((item,index)=>{
       const product=products[item.id],row=document.createElement('div');row.className='bag-item';
       // Only closed, validated catalogue values are interpolated. Customer text uses textContent.
-      row.innerHTML='<img src="'+product.image+'" alt="'+product.name+' bottle" width="76" height="92"><div><h3>'+product.name+'</h3><small>'+item.size+' ml · Eau de parfum</small><div class="quantity-controls"><button aria-label="Reduce '+product.name+' '+item.size+' ml quantity" data-adjust="-1">−</button><span aria-label="Quantity">'+item.qty+'</span><button aria-label="Increase '+product.name+' '+item.size+' ml quantity" data-adjust="1"'+(item.qty===99?' disabled':'')+'>+</button></div></div><div class="item-end"><span class="item-price">'+formatPrice(prices[item.size]*item.qty)+'</span><button class="remove-item" aria-label="Remove '+product.name+' '+item.size+' ml">Remove</button></div>';
+      row.innerHTML='<img src="'+product.image+'" alt="'+product.name+' bottle" width="76" height="92"><div><h3>'+product.name+'</h3><small>'+itemSizeLabel(item)+' · Eau de parfum</small><div class="quantity-controls"><button aria-label="Reduce '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="-1">−</button><span aria-label="Quantity">'+item.qty+'</span><button aria-label="Increase '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="1"'+(item.qty===99?' disabled':'')+'>+</button></div></div><div class="item-end"><span class="item-price">'+formatPrice(itemPrice(item)*item.qty)+'</span><button class="remove-item" aria-label="Remove '+product.name+' '+itemSizeLabel(item)+'">Remove</button></div>';
       $$('[data-adjust]',row).forEach(button=>button.addEventListener('click',()=>{const label=button.getAttribute('aria-label');item.qty=Math.max(0,Math.min(99,item.qty+Number(button.dataset.adjust)));if(!item.qty)bag.splice(index,1);saveBag();renderBag();const next=$$('button',items).find(el=>el.getAttribute('aria-label')===label);if(next&&!next.disabled)next.focus({preventScroll:true})}));
       $('.remove-item',row).addEventListener('click',()=>{bag.splice(index,1);saveBag();renderBag();$('#bag-title').focus({preventScroll:true})});items.append(row);
     });
@@ -156,7 +159,7 @@
   let verifiedPhone = '';
   if ($('#order-details')) {
     if (!bag.length) location.replace('the-scent.html');
-    $('#details-summary').textContent = bag.map(item => products[item.id].name + ' · ' + item.size + ' ml × ' + item.qty).join(' / ');
+    $('#details-summary').textContent = bag.map(item => products[item.id].name + ' · ' + itemSizeLabel(item) + ' × ' + item.qty).join(' / ');
     renderCheckoutTotals();
     const pin = new URLSearchParams(location.search).get('pin');
     if (/^[1-9]\d{5}$/.test(pin)) {
@@ -202,7 +205,7 @@
       const saved=await result.json();
       if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
-        bag.map(item=>products[item.id].name+' · '+item.size+' ml × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+
+        bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(prices[item.size]*item.qty)).join('\n\n')+
         '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
         '\nShipping: '+formatPrice(saved.shipping)+
         (saved.promoCode?'\nPromo '+saved.promoCode+': −'+formatPrice(saved.discount):'')+'\nOrder total: '+formatPrice(saved.total)+
@@ -219,11 +222,11 @@
   $$('.mood-tab').forEach((tab,index)=>{tab.addEventListener('click',()=>setMood(tab.dataset.mood));tab.addEventListener('keydown',event=>{const tabs=$$('.mood-tab');let next;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();setMood(tabs[next].dataset.mood);tabs[next].focus()})});
 
   const shop = document.querySelector('.scent-shop');
-  if (shop && Object.hasOwn(products,new URLSearchParams(location.search).get('scent'))) {
+  if (shop && ['fresh','arena','oud'].includes(new URLSearchParams(location.search).get('scent'))) {
     $('.catalog').hidden = true;
     shop.hidden = false;
     $('.skip').href = '#fragrance-detail';
-    const keys = Object.keys(products);
+    const keys = ['fresh','arena','oud'];
     const requested = new URLSearchParams(location.search).get('scent');
     let position = keys.includes(requested) ? keys.indexOf(requested) : 0;
     function selectFragrance(offset) {
