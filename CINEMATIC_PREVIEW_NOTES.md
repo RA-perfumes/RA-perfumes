@@ -4,8 +4,8 @@ This branch is **not published to raperfume.com**. Merge only after reviewing on
 
 ## Changed
 - Eliminated full video download / Blob memory copy. Native MP4 streaming can use HTTP range requests and browser caching.
-- Optimized desktop scroll video for short seek intervals and created a mobile video rendition.
-- On touch screens, normal muted playback replaces repeated per-scroll video seeks; the captions still respond to scroll.
+- Removed all scroll-driven video seeking on both desktop and mobile. Film plays once using native decoding; text chapters alone follow scrolling.
+- The browser handles video playback independently of scrolling. Pausing at the end avoids a visible looping seam.
 - Skips video for reduced motion, Save Data, very slow 2G, or low-memory devices and keeps a readable hero still.
 - Stops off-screen and background video work, caps seeking rate, and falls back to the original media if optimized sources fail.
 - Simplified expensive mobile header blur without altering the chosen brand palette or layout.
@@ -23,7 +23,7 @@ The desktop output faithfully retains the existing source resolution; the mobile
 A **genuine 4K master film** is required for actual 4K detail. Upscaling cannot invent native detail, and forcing 4K playback on phones would damage load time and smoothness.
 
 ## Review before publishing
-- Scroll forward and backward through the hero on desktop.
+- Scroll forward and backward through the hero on desktop. The film should keep playing naturally, while chapter text follows scroll.
 - Test an iPhone in Safari on Wi-Fi and cellular. Text should always remain readable.
 - On slow networks, confirm the hero still is visible even if video fails.
 - Check reduced-motion preference and browser Back navigation.
