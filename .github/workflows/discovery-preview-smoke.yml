@@ -34,6 +34,18 @@ jobs:
               page.on('pageerror',error=>errors.push(error.message));
               const root='http://127.0.0.1:8765/the-scent.html';
               await page.goto(root,{waitUntil:'load'});
+              await page.waitForSelector('#box-showcase');
+              const banners=await page.evaluate(()=>({
+                photos:document.querySelectorAll('#box-gallery-track img').length,
+                trackWidth:document.querySelector('#box-gallery-track').clientWidth,
+                visible:document.querySelector('#box-showcase').getBoundingClientRect().height
+              }));
+              assert.equal(banners.photos,2,'top banner must show both RA boxes');
+              assert(banners.trackWidth>100&&banners.visible>150,'top banner must be visible');
+              await page.click('#box-showcase [data-box-step="1"]');
+              await page.waitForFunction(()=>document.querySelector('#box-gallery-track').scrollLeft>70);
+              await page.waitForFunction(()=>document.querySelector('#box-showcase [data-box-to="1"]').getAttribute('aria-pressed')==='true');
+              console.log('PASS: top The Scent banner slides between both boxes');
               await page.waitForSelector('#discovery-set');
               await page.click('#discovery-set');
               await page.waitForFunction(()=>location.search.includes('scent=discovery'));
