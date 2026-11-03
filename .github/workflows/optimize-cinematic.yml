@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: improve-cinematic-performance-nov2026
-      - name: Make scrub-friendly desktop and lightweight mobile films
+      - name: Install FFmpeg\n        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg\n      - name: Make scrub-friendly desktop and lightweight mobile films
         run: |
           set -euo pipefail
           ffmpeg -hide_banner -loglevel error -nostdin -y -i assets/presence.mp4 -an -c:v libx264 -preset medium -crf 23 -g 8 -keyint_min 8 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart assets/presence-scrub.mp4
@@ -29,5 +29,6 @@ jobs:
           git add assets/presence-scrub.mp4 assets/presence-mobile.mp4
           if ! git diff --cached --quiet; then
             git commit -m "Add lean mobile and keyframe-optimized desktop video"
+            git pull --rebase origin improve-cinematic-performance-nov2026
             git push
           fi
