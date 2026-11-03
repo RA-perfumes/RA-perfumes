@@ -11,7 +11,7 @@
   const cache=bands.map(()=>({o:-1,k:-1,active:null}));
   let mode='static',visible=false,loaded=false,ready=false,broken=false,raf=0;
   let shown=0,target=0,lastTick=0,seeking=false,pending=null,seekTimer=0,pendingTimer=0;
-  let lastSeek=0,stalls=0,watchdog=0;
+  let lastSeek=0,stalls=0,watchdog=0,usingOriginal=false;
   const constrained=()=>reduce.matches||!!(connection&&(connection.saveData||['slow-2g','2g'].includes(connection.effectiveType)))||(typeof navigator.deviceMemory==='number'&&navigator.deviceMemory<=2);
   const choice=()=>broken||constrained()?'static':coarse.matches||innerWidth<=760?'play':'scrub';
   const progress=()=>clamp(-hero.getBoundingClientRect().top/Math.max(1,hero.offsetHeight-innerHeight));
@@ -61,7 +61,18 @@
     if(pending!==null&&mode==='scrub'){const latest=pending;pending=null;seek(latest)}
   }
   video.addEventListener('seeked',()=>{seeking=false;stalls=0;flush()});
-  video.addEventListener('error',()=>{if(loaded&&!broken)fail()});
+  video.addEventListener('error',()=>{
+    if(!loaded||broken)return;
+    if(!usingOriginal){
+      usingOriginal=true;
+      ready=false;
+      stage.classList.remove('video-ready');
+      video.src='assets/presence.mp4';
+      video.load();
+      return;
+    }
+    fail();
+  });
   video.addEventListener('stalled',()=>{if(mode==='play')stage.classList.remove('video-ready')});
   video.addEventListener('playing',()=>{if(mode==='play')stage.classList.add('video-ready')});
   video.addEventListener('loadedmetadata',()=>{
@@ -81,9 +92,9 @@
   function load(){
     if(loaded||broken||mode==='static'||!visible)return;
     loaded=true;stage.classList.add('is-loading');
-    video.preload=mode==='play'?'auto':'metadata';video.muted=true;video.playsInline=true;
+    video.preload='auto';video.muted=true;video.playsInline=true;
     // Browser-native streaming supports HTTP ranges and avoids duplicate Blob memory.
-    video.src='assets/presence.mp4';video.load();
+    usingOriginal=false;video.src=mode==='play'?'assets/presence-mobile.mp4':'assets/presence-scrub.mp4';video.load();
     watchdog=setTimeout(()=>{stage.classList.remove('is-loading');if(!ready&&mode!=='static')fail()},12000);
   }
   function tick(now){
@@ -108,6 +119,13 @@
     }
     if(changed){
       stop();cache.forEach(c=>{c.o=-1;c.k=-1;c.active=null});
+      const desired=mode==='play'?'assets/presence-mobile.mp4':'assets/presence-scrub.mp4';
+      if(loaded&&!usingOriginal&&video.getAttribute('src')!==desired){
+        loaded=false;ready=false;seeking=false;pending=null;
+        clearTimeout(seekTimer);clearTimeout(pendingTimer);
+        stage.classList.remove('video-ready');
+        try{video.pause();video.removeAttribute('src')}catch{}
+      }
       if(mode==='scrub'){try{video.pause()}catch{}}
     }
     shown=target=progress();render(shown);
