@@ -18,7 +18,7 @@ export default async function handler(req,res){
     const lines=[];
     for(const item of d.items){
       const size=Number(item.size), qty=Number(item.qty);
-      if(!Object.hasOwn(NAMES,item.id) || !Object.hasOwn(PRICES,size) || !Number.isInteger(qty) || qty<1 || qty>99){
+      if(!Object.hasOwn(NAMES,item.id) || !Object.hasOwn(PRICES,size) || (item.id==='discovery'&&size!==30) || !Number.isInteger(qty) || qty<1 || qty>99){
         return res.status(400).json({success:false,error:'Invalid fragrance selection'});
       }
       subtotal += PRICES[size]*qty;
