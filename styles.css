@@ -252,3 +252,63 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
   object-fit:contain!important;object-position:center;
   padding:clamp(8px,1.3vw,18px);box-sizing:border-box;min-height:0;min-width:0;
 }
+
+/* The Scent: slideshow occupies only the original banner photograph's frame. */
+.catalog-banner .catalog-banner-gallery{
+  position:relative;align-self:stretch;min-width:0;width:100%;
+  height:clamp(210px,24vw,310px);padding:0;
+  overflow:hidden;background:#331a29;
+  isolation:isolate;
+}
+.catalog-banner .box-gallery-track{
+  display:flex;width:100%;height:100%;padding:0;
+  align-self:stretch;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.catalog-banner .box-gallery-track::-webkit-scrollbar{display:none}
+.catalog-banner .box-gallery-track img{
+  display:block;flex:0 0 100%;min-width:100%;max-width:100%;
+  width:100%;height:100%;object-fit:cover;object-position:center;
+  scroll-snap-align:start;scroll-snap-stop:always;
+}
+.catalog-banner .box-gallery-track img:nth-child(2){
+  object-fit:contain;object-position:center;
+  padding:6px;background:#381a28;
+}
+.catalog-banner .box-gallery-arrow{
+  position:absolute;z-index:3;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:30px;height:30px;
+  border:1px solid #d9b47785;border-radius:50%;
+  color:var(--gold);background:#21111ec9;font:27px/1 Georgia,serif;
+}
+.catalog-banner .box-gallery-previous{left:7px}
+.catalog-banner .box-gallery-next{right:7px}
+.catalog-banner .box-gallery-arrow:hover{background:#301d2ae8}
+.catalog-banner .box-gallery-dots{
+  position:absolute;z-index:3;bottom:8px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:3px 8px;background:#20101bb8;border-radius:50px;
+}
+.catalog-banner .box-gallery-dots button{
+  width:25px;height:20px;display:grid;place-items:center;
+}
+.catalog-banner .box-gallery-dots button::after{
+  content:"";display:block;width:6px;height:6px;border-radius:20px;
+  background:#d9b47780;transition:background .2s,width .2s;
+}
+.catalog-banner .box-gallery-dots button[aria-pressed="true"]::after{
+  width:15px;background:var(--gold);
+}
+@media(max-width:700px){
+  .catalog-banner .catalog-banner-gallery{height:190px}
+  .catalog-banner .box-gallery-track img:nth-child(2){padding:3px}
+  .catalog-banner .box-gallery-arrow{width:28px;height:28px;font-size:25px}
+  .catalog-banner .box-gallery-previous{left:4px}
+  .catalog-banner .box-gallery-next{right:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .catalog-banner .box-gallery-track{scroll-behavior:auto}
+  .catalog-banner .box-gallery-dots button::after{transition:none}
+}
