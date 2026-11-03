@@ -125,3 +125,43 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
  .discovery-card-art-name{font-size:9px}
  .discovery-card-art-detail{font-size:7px}
 }
+
+/* Inner pages: logo only, in normal document flow. Home header remains unchanged. */
+.inner-page .site-header{
+  position:relative;inset:auto;z-index:2;
+  display:flex;justify-content:flex-start;align-items:center;
+  padding:12px 5vw 8px;gap:0;
+  background:transparent;border-bottom:0;box-shadow:none;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.inner-page .site-header .brand{width:78px}
+.inner-page .site-header .brand img{height:68px}
+.inner-page .header-nav{display:none}
+.inner-page .catalog{padding-top:18px}
+.inner-page .scent-shop{padding-top:24px}
+.inner-page .details-page{margin-top:32px}
+@media(max-width:700px){
+  .inner-page .site-header{padding:10px 4vw 8px}
+  .inner-page .site-header .brand{width:70px}
+  .inner-page .site-header .brand img{height:62px}
+  .inner-page .catalog{padding-top:12px}
+  .inner-page .scent-shop{padding-top:18px}
+  .inner-page .details-page{margin-top:24px}
+}
+/* Fixed-size visual grid: every shelf card and its CTA align in both rows. */
+.catalog-grid{align-items:stretch;grid-auto-rows:1fr}
+.catalog-grid>.catalog-card{
+  display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;
+}
+.catalog-grid>.catalog-card>div{
+  display:flex;flex-direction:column;flex:1;min-height:0;
+}
+.catalog-grid>.catalog-card>div>span{margin-top:auto}
+.catalog-grid>.catalog-card>div>b{margin-top:16px}
+.catalog-card#discovery-set h3{
+  font-size:clamp(20px,2.25vw,31px);letter-spacing:-.035em;white-space:nowrap;
+}
+@media(max-width:700px){
+  .catalog-card#discovery-set h3{font-size:clamp(17px,4.3vw,21px)}
+  .catalog-grid>.catalog-card>div>b{margin-top:14px}
+}
