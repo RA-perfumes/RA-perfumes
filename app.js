@@ -106,7 +106,20 @@
   });
   $$('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
   function setSize(size){currentSize=Number(size);$$('.size-option').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.size)===currentSize)));$('#product-price').textContent=formatPrice(prices[currentSize]);$('#product-original').textContent=formatPrice(originalPrices[currentSize]);$('#product-size-caption').textContent=currentSize+' ml'}
-  function showProduct(id){const product=products[id];if(!product)return;currentProduct=id;$('#product-title').textContent=product.name;$('.product-story').textContent=product.story;$('#product-image').src=product.image;$('#product-image').alt=product.name+' by RA Perfumes, minimal transparent glass bottle';setSize(50);if(!shop)openDialog(productDialog)}
+  function showProduct(id){
+    const product=products[id];if(!product)return;
+    currentProduct=id;
+    $('#product-title').textContent=product.name;
+    $('.product-story').textContent=product.story;
+    $('#product-image').src=product.image;
+    $('#product-image').alt=id==='discovery'?'RA Perfumes Discovery Set: Fresh, Arena and Oud, three 10 ml bottles':product.name+' by RA Perfumes, minimal transparent glass bottle';
+    const isSet=id==='discovery';
+    $('.sizes',productDialog).hidden=isSet;
+    $('#product-original').hidden=isSet;
+    if(isSet){currentSize=30;$('#product-price').textContent=formatPrice(199);$('#product-size-caption').textContent='3 × 10 ml';}
+    else setSize(50);
+    if(!shop)openDialog(productDialog);
+  }
   document.addEventListener('click',event=>{const button=event.target.closest('[data-product]');if(button)location.href='the-scent.html?scent='+button.dataset.product});
   $$('.size-option').forEach(button=>button.addEventListener('click',()=>setSize(button.dataset.size)));
   function addBottle(id, size, origin) {
@@ -222,11 +235,11 @@
   $$('.mood-tab').forEach((tab,index)=>{tab.addEventListener('click',()=>setMood(tab.dataset.mood));tab.addEventListener('keydown',event=>{const tabs=$$('.mood-tab');let next;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();setMood(tabs[next].dataset.mood);tabs[next].focus()})});
 
   const shop = document.querySelector('.scent-shop');
-  if (shop && ['fresh','arena','oud'].includes(new URLSearchParams(location.search).get('scent'))) {
+  if (shop && ['fresh','arena','oud','discovery'].includes(new URLSearchParams(location.search).get('scent'))) {
     $('.catalog').hidden = true;
     shop.hidden = false;
     $('.skip').href = '#fragrance-detail';
-    const keys = ['fresh','arena','oud'];
+    const keys = ['fresh','arena','oud','discovery'];
     const requested = new URLSearchParams(location.search).get('scent');
     let position = keys.includes(requested) ? keys.indexOf(requested) : 0;
     function selectFragrance(offset) {
