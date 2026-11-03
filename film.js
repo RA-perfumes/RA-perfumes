@@ -124,6 +124,7 @@
     else{stop();try{video.pause()}catch{}}
   },{threshold:0,rootMargin:'120px 0px'}).observe(hero);
   document.addEventListener('visibilitychange',()=>{
+    document.body.classList.toggle('paused',document.hidden);
     if(document.hidden){stop();try{video.pause()}catch{}}
     else{if(mode==='play')play();scroll()}
   });
