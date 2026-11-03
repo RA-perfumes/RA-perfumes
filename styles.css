@@ -102,3 +102,26 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 @media(min-width:1100px){.catalog-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(min-width:701px) and (max-width:1099px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.catalog-card#discovery-set{scroll-margin-top:90px}}
+
+/* Fix image-driven grid stretching: every collection product remains card-sized. */
+.catalog-grid{align-items:start}
+.catalog-card{min-width:0;max-width:100%}
+.catalog-card>img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover}
+.catalog-card#discovery-set .discovery-card-art{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;aspect-ratio:1/1;min-height:0;overflow:hidden;
+  border:1px solid #d9bd804a;border-radius:5px;
+  background:radial-gradient(circle at 50% 28%,#513043,#261520 72%);
+  color:#d9bd80;text-align:center;
+}
+.discovery-card-symbol{font-family:Editorial,Georgia,serif;font-weight:400;font-size:clamp(43px,6vw,88px);line-height:1;letter-spacing:-.1em;margin-right:.12em}
+.discovery-card-art-name{margin-top:15px;font-size:clamp(9px,1vw,13px);letter-spacing:.2em}
+.discovery-card-art-detail{font-size:clamp(7px,.8vw,10px);letter-spacing:.12em;color:#b9999d;margin-top:7px}
+.product-art.is-discovery{background:radial-gradient(circle at 50% 32%,#543147,#20121e 75%)}
+.product-art.is-discovery img{width:66%;height:66%;left:17%;top:7%;object-fit:contain}
+.product-art.is-discovery::after{content:"DISCOVERY SET  ·  3 × 10 ML";position:absolute;left:0;right:0;bottom:13%;font-size:11px;letter-spacing:.21em;color:#d9bd80;text-align:center}
+@media(max-width:700px){
+ .catalog-card#discovery-set .discovery-card-symbol{font-size:clamp(36px,10vw,64px)}
+ .discovery-card-art-name{font-size:9px}
+ .discovery-card-art-detail{font-size:7px}
+}
