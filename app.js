@@ -10,10 +10,10 @@
   // Contact details stay local until Continue opens the business WhatsApp chat.
   const WHATSAPP_NUMBER='918939429631';
   const products={
-    discovery:{name:'Discovery Set',image:'assets/ra-mark.webp',story:'Three distinctive expressions of RA Perfumes, together for your first discovery.',description:'Fresh, Arena & Oud · 3 × 10 ml'},
-    fresh:{name:'Fresh',image:'assets/fresh-clear.webp',moodImage:'assets/sweet-lime.webp',moodAlt:'Sweet lime on dark stone with ivory silk',inspiration:'Sweet lime',description:'Sweet lime sets the mood. The rest is a quiet secret, made personal by the way you wear it.',story:'A sunlit orchard. The delicate brightness of sweet lime. Fresh is an invitation to begin again, with an ivory-light elegance that feels entirely your own.',quote:'Sweet lime in the morning light.\nA little radiance, just for you.'},
-    arena:{name:'Arena',image:'assets/arena-clear.webp',moodImage:'assets/blackcurrant-amber.webp',moodAlt:'Blackcurrants, ruby silk and glowing amber resin',inspiration:'Blackcurrant & amber',description:'Blackcurrant and amber inspire a darker mood. Some impressions are better felt than explained.',story:'The evening turns a deeper shade. Inspired by blackcurrant and the glow of amber, Arena imagines a world of ruby light and unhurried closeness. For nights that deserve their own signature.',quote:'Dark fruit. Warm amber.\nAn invitation to come closer.'},
-    oud:{name:'Oud',image:'assets/oud-clear.webp',moodImage:'assets/notes-wood.webp',moodAlt:'Natural wood textures, an earthy fragrance inspiration',inspiration:'Oud & warm woods',description:'Warm woods. A golden stillness. A fragrance mood that keeps its most personal secrets close.',story:'Warm wood. Golden light. A moment held in stillness. Oud evokes a measured, assured elegance, for those drawn to depth and the pleasure of taking their time.',quote:'The warmth of wood.\nThe quiet confidence of gold.'}
+    discovery:{name:'Discovery Set',image:'assets/discovery-set-new.jpg',story:'Explore all three signatures in one set: ILAVEYIL, IRAVÉ and French Rose Oud. Three 10 ml perfumes.',description:'ILAVEYIL · IRAVÉ · French Rose Oud · 3 × 10 ml'},
+    fresh:{name:'ILAVEYIL',image:'assets/ilaveyil-new.jpg',moodImage:'assets/ilaveyil-new.jpg',moodAlt:'ILAVEYIL perfume in warm morning light',inspiration:'Sweet lime',description:'Sweet-lime freshness that captures the feeling of a new morning.',story:'Sweet-lime freshness that captures the feeling of a new morning.',quote:'Sweet-lime freshness that captures the feeling of a new morning.'},
+    arena:{name:'IRAVÉ',image:'assets/irave-new.jpg',moodImage:'assets/irave-new.jpg',moodAlt:'IRAVÉ perfume in a soft evening glow',inspiration:'Soft sweetness',description:'A soft sweetness that unfolds into warmth as evening settles.',story:'A soft sweetness that unfolds into warmth as evening settles.',quote:'A soft sweetness that unfolds into warmth as evening settles.'},
+    oud:{name:'French Rose Oud',image:'assets/french-rose-oud-new.jpg',moodImage:'assets/french-rose-oud-new.jpg',moodAlt:'French Rose Oud perfume beside a rose and warm oud wood',inspiration:'Rose & oud',description:'Soft rose petals unfolding into the rich warmth of oud.',story:'Soft rose petals unfolding into the rich warmth of oud.',quote:'Soft rose petals unfolding into the rich warmth of oud.'}
   };
   const productDialog=$('#product-dialog'),bagDialog=$('#bag-dialog');
   let bag=[],currentProduct='fresh',currentSize=50,toastTimer,orderMessage='';
@@ -105,66 +105,26 @@
     dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()});
   });
   $$('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
-  // Discovery Set: native scroll-snap gallery with independent product navigation.
-  const discoveryGallery=$('#discovery-gallery');
-  const galleryTrack=$('#discovery-gallery-track');
-  let galleryIndex=0,galleryScrollFrame=0;
-  const galleryButtons=discoveryGallery?$$('[data-gallery-to]',discoveryGallery):[];
-  function markGallery(index){
-    galleryIndex=Math.max(0,Math.min(3,index));
-    galleryButtons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===galleryIndex)));
-    if(discoveryGallery){
-      const prev=$('[data-gallery-step="-1"]',discoveryGallery);
-      const next=$('[data-gallery-step="1"]',discoveryGallery);
-      if(prev)prev.disabled=galleryIndex===0;
-      if(next)next.disabled=galleryIndex===3;
-    }
-  }
-  function goToGallery(index,animate=true){
-    if(!galleryTrack)return;
-    markGallery(index);
-    galleryTrack.scrollTo({left:galleryIndex*galleryTrack.clientWidth,behavior:animate&&!reduce.matches?'smooth':'auto'});
-  }
-  if(discoveryGallery&&galleryTrack){
-    $$('[data-gallery-step]',discoveryGallery).forEach(button=>button.addEventListener('click',()=>goToGallery(galleryIndex+Number(button.dataset.galleryStep))));
-    galleryButtons.forEach(button=>button.addEventListener('click',()=>goToGallery(Number(button.dataset.galleryTo))));
-    galleryTrack.addEventListener('scroll',()=>{
-      if(galleryScrollFrame)return;
-      galleryScrollFrame=requestAnimationFrame(()=>{
-        galleryScrollFrame=0;
-        if(galleryTrack.clientWidth>0)markGallery(Math.round(galleryTrack.scrollLeft/galleryTrack.clientWidth));
-      });
-    },{passive:true});
-    galleryTrack.addEventListener('keydown',event=>{
-      if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
-        event.preventDefault();
-        goToGallery(galleryIndex+(event.key==='ArrowRight'?1:-1));
-      }
-    });
-    markGallery(0);
-  }
   function setSize(size){currentSize=Number(size);$$('.size-option').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.size)===currentSize)));$('#product-price').textContent=formatPrice(prices[currentSize]);$('#product-original').textContent=formatPrice(originalPrices[currentSize]);$('#product-size-caption').textContent=currentSize+' ml'}
   function showProduct(id){
     const product=products[id];if(!product)return;
     currentProduct=id;
     $('#product-title').textContent=product.name;
     $('.product-story').textContent=product.story;
-    $('#product-image').src=product.image;
-    $('#product-image').alt=id==='discovery'?'RA Perfumes Discovery Set: Fresh, Arena and Oud, three 10 ml bottles':product.name+' by RA Perfumes, minimal transparent glass bottle';
+    const image=$('#product-image');
+    image.src=product.image;
+    image.alt=id==='discovery'?'RA Perfumes Discovery Set containing ILAVEYIL, IRAVÉ and French Rose Oud, three 10 ml bottles':product.name+' by RA Perfumes';
+    image.hidden=false;
     const isSet=id==='discovery';
     $('.product-art',productDialog).classList.toggle('is-discovery',isSet);
     $('.sizes',productDialog).hidden=isSet;
-    const image=$('#product-image');
-    if(image)image.hidden=isSet;
-    if(discoveryGallery)discoveryGallery.hidden=!isSet;
     if(shop){const navigation=$('.scent-switch');if(navigation)navigation.hidden=isSet;}
-    $('#product-original').hidden=false;
+    $('#product-original').hidden=!isSet;
     if(isSet){
       currentSize=30;
       $('#product-original').textContent=formatPrice(399);
       $('#product-price').textContent=formatPrice(199);
       $('#product-size-caption').textContent='3 × 10 ml';
-      if(galleryTrack){galleryTrack.scrollLeft=0;markGallery(0);}
     }else setSize(50);
     if(!shop)openDialog(productDialog);
   }
