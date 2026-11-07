@@ -1,4 +1,4 @@
-name: RA Perfumes Homepage Preview Smoke Test
+name: RA Perfumes Gifting Preview Smoke Test
 on:
   push:
     branches: [preview-discovery-gallery-20261103]
@@ -18,7 +18,7 @@ jobs:
           node-version: '22'
       - name: Install browser driver
         run: npm install --no-save --no-package-lock puppeteer-core
-      - name: Verify brand logo, footer link and Diwali slides on mobile
+      - name: Verify brand logo, footer link and gift slides on mobile
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ra-home-server.log 2>&1 &
           node <<'JS'
@@ -50,7 +50,7 @@ jobs:
               assert.equal(data.sameLogo,true,'same original RA logo must be used');
               assert.equal(data.logoLoaded,true,'brand logo must load');
               assert.equal(data.bottomLink,null,'closing Explore link must be removed');
-              assert.match(data.title,/Celebrate.*Diwali.*with us/i);
+              assert.match(data.title,/Celebrate\s+with gifts\./i);
               assert.equal(data.slidePhotos,2);
               assert(data.source.includes('assets/diwali-closed.jpg'));
               assert(data.source.includes('assets/diwali-open.jpg'));
