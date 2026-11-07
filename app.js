@@ -119,7 +119,7 @@
     $('.product-art',productDialog).classList.toggle('is-discovery',isSet);
     $('.sizes',productDialog).hidden=isSet;
     if(shop){const navigation=$('.scent-switch');if(navigation)navigation.hidden=isSet;}
-    $('#product-original').hidden=!isSet;
+    $('#product-original').hidden=false;
     if(isSet){
       currentSize=30;
       $('#product-original').textContent=formatPrice(399);
