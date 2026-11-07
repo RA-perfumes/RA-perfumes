@@ -15,10 +15,11 @@
   <link rel="preload" href="assets/display.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="assets/display-italic.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="assets/sans.woff" as="font" type="font/woff" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20261107-brandrefresh1">
+  <link rel="stylesheet" href="styles.css?v=20261107-diwali2">
   <script src="phone-auth.js" defer></script>
   <script src="app.js?v=20261107-brandrefresh1" defer></script>
   <script src="film.js?v=2b9716e3926a" defer></script>
+  <script src="diwali-gallery.js?v=20261107-diwali2" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -109,14 +110,33 @@
       <div class="presentation-heading reveal"><p class="eyebrow">The presentation</p><h2 id="presentation-title">The pleasure begins<br><em>before the perfume.</em></h2></div>
       <div class="presentation-layout">
         <figure class="presentation-photo reveal"><img src="assets/ra-presentation-photo.webp" alt="RA Perfumes presentation box in royal plum, with gold branding, a wine-coloured interior and black ribbon handles" width="1536" height="1024" loading="lazy"></figure>
-        <div class="presentation-copy reveal"><span class="presentation-number" aria-hidden="true">RA</span><h3>A moment.<br>Made to be opened.</h3><p>Pull the ribbon. Lift the lid. Your fragrance is waiting.</p><p>Our presentation brings the world of RA into your hands. A personal indulgence, or a thoughtful gesture for someone unforgettable.</p><a class="text-link" href="#collection">Find your fragrance <span class="arrow-disc perfume-disc" aria-hidden="true"><svg class="perfume-icon" viewBox="0 0 32 36" fill="none" aria-hidden="true"><rect x="11" y="3" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M13 8v4m6-4v4" stroke="currentColor" stroke-width="1.3"/><rect x="6" y="12" width="20" height="21" rx="5" stroke="currentColor" stroke-width="1.3"/><path d="M10 16v10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="m16 19 3 4-3 4-3-4 3-4Z" fill="currentColor" opacity=".65"/></svg></span></a></div>
+        <div class="presentation-copy reveal"><img class="presentation-brand-logo" src="assets/ra-mark.webp" alt="RA Perfumes" width="1024" height="1024" loading="lazy"><h3>A moment.<br>Made to be opened.</h3><p>Pull the ribbon. Lift the lid. Your fragrance is waiting.</p><p>Our presentation brings the world of RA into your hands. A personal indulgence, or a thoughtful gesture for someone unforgettable.</p><a class="text-link" href="#collection">Find your fragrance <span class="arrow-disc perfume-disc" aria-hidden="true"><svg class="perfume-icon" viewBox="0 0 32 36" fill="none" aria-hidden="true"><rect x="11" y="3" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M13 8v4m6-4v4" stroke="currentColor" stroke-width="1.3"/><rect x="6" y="12" width="20" height="21" rx="5" stroke="currentColor" stroke-width="1.3"/><path d="M10 16v10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="m16 19 3 4-3 4-3-4 3-4Z" fill="currentColor" opacity=".65"/></svg></span></a></div>
       </div>
     </section>
   </main>
   <footer class="closing" id="closing">
     <p class="eyebrow closing-whisper reveal">The story continues on your skin</p>
     <div class="customer-gallery" hidden aria-label="Customer photographs"></div>
-    <div class="closing-top reveal"><h2>Some things<br>stay a <em>mystery.</em></h2><a class="text-link" href="#collection">Explore the collection <span class="arrow-disc perfume-disc" aria-hidden="true"><svg class="perfume-icon" viewBox="0 0 32 36" fill="none" aria-hidden="true"><rect x="11" y="3" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M13 8v4m6-4v4" stroke="currentColor" stroke-width="1.3"/><rect x="6" y="12" width="20" height="21" rx="5" stroke="currentColor" stroke-width="1.3"/><path d="M10 16v10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="m16 19 3 4-3 4-3-4 3-4Z" fill="currentColor" opacity=".65"/></svg></span></a></div>
+    <div class="closing-top reveal"><h2>Some things<br>stay a <em>mystery.</em></h2></div>
+    <section class="diwali-feature reveal" aria-labelledby="diwali-title">
+      <div class="diwali-intro">
+        <p class="eyebrow">RA Perfumes · Festive moments</p>
+        <h3 id="diwali-title">Celebrate <em>Diwali</em><br>with us.</h3>
+        <p>A little light. A thoughtful gesture. A moment worth sharing.</p>
+      </div>
+      <div class="diwali-gallery" id="diwali-gallery" role="region" aria-roledescription="carousel" aria-label="RA Perfumes Diwali gift presentation">
+        <div class="diwali-gallery-track" id="diwali-gallery-track" tabindex="0" aria-label="Swipe through the Diwali gift box photographs">
+          <figure class="diwali-gallery-slide"><img src="assets/diwali-closed.jpg" alt="Black RA Perfumes gift box with gold logo and Luxury that stays lettering" width="1536" height="2048" loading="lazy" decoding="async"></figure>
+          <figure class="diwali-gallery-slide"><img src="assets/diwali-open.jpg" alt="RA Perfumes Diwali gift box open with a black fragrance gift, chocolates, diyas and a Diwali greeting card" width="1536" height="2048" loading="lazy" decoding="async"></figure>
+        </div>
+        <button type="button" class="diwali-arrow diwali-prev" data-diwali-step="-1" aria-label="Previous Diwali photograph"><span aria-hidden="true">‹</span></button>
+        <button type="button" class="diwali-arrow diwali-next" data-diwali-step="1" aria-label="Next Diwali photograph"><span aria-hidden="true">›</span></button>
+        <div class="diwali-dots" role="group" aria-label="Select gift photo">
+          <button type="button" data-diwali-to="0" aria-label="View closed RA gift box" aria-pressed="true"></button>
+          <button type="button" data-diwali-to="1" aria-label="View open RA gift box" aria-pressed="false"></button>
+        </div>
+      </div>
+    </section>
     <a class="footer-brand" href="#top" aria-label="RA Perfumes, back to the beginning"><img src="assets/ra-mark.webp" alt="RA Perfumes" width="1024" height="1024" loading="lazy"></a>
     <p class="footer-slogan">Luxury that stays.</p>
     <div class="footer-bottom"><span>© <span id="year">2026</span> RA Perfumes</span><a href="#top">Back to the beginning <span aria-hidden="true">↑</span></a></div>
