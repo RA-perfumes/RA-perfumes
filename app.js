@@ -247,29 +247,7 @@
     $('.catalog').hidden = true;
     shop.hidden = false;
     $('.skip').href = '#fragrance-detail';
-    const keys = ['fresh','arena','oud','discovery'];
-    const requested = new URLSearchParams(location.search).get('scent');
-    let position = keys.includes(requested) ? keys.indexOf(requested) : 0;
-    function selectFragrance(offset) {
-      position = (position + offset + keys.length) % keys.length;
-      const id = keys[position];
-      showProduct(id);
-      $('#scent-position').textContent = products[id].name + ' · ' + (position + 1) + ' / ' + keys.length;
-      history.replaceState(null, '', '?scent=' + id);
-    }
-    $('#prev-perfume').onclick = () => selectFragrance(-1);
-    $('#next-perfume').onclick = () => selectFragrance(1);
-    let start;
-    const art = $('.product-art');
-    art.addEventListener('touchstart', e => { start = e.touches[0]; }, {passive:true});
-    art.addEventListener('touchend', e => {
-      if (!start) return;
-      if (currentProduct==='discovery') { start=null; return; }
-      const end = e.changedTouches[0], dx = end.clientX - start.clientX;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(end.clientY - start.clientY)) selectFragrance(dx < 0 ? 1 : -1);
-      start = null;
-    });
-    selectFragrance(0);
+    showProduct(new URLSearchParams(location.search).get('scent'));
   }
   const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.08});
   if(!reduce.matches)document.body.classList.add('js-motion');$$('.reveal').forEach(el=>observer.observe(el));
