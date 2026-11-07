@@ -67,7 +67,20 @@ jobs:
                   nextDisabled:document.querySelector('[data-diwali-step="1"]').disabled,
                   script:[...document.scripts].map(s=>s.src).filter(s=>s.includes('diwali'))};
               });
-              console.log('DIWALI DEBUG',JSON.stringify({debug,errors}));
+              const deep=await page.evaluate(()=>{
+                const next=document.querySelector('[data-diwali-step="1"]');
+                const prev=document.querySelector('[data-diwali-step="-1"]');
+                const box=next.getBoundingClientRect();
+                const element=document.elementFromPoint(box.left+box.width/2,box.top+box.height/2);
+                return {prevDisabled:prev.disabled,hitTag:element?.tagName,hitClass:element?.getAttribute('class'),
+                  hitIsArrow:element===next||next.contains(element),nextRects:{x:box.x,y:box.y,width:box.width,height:box.height}};
+              });
+              console.log('DIWALI DEBUG',JSON.stringify({debug,deep,errors}));
+              await page.$eval('[data-diwali-step="1"]',el=>el.click());
+              await new Promise(resolve=>setTimeout(resolve,400));
+              const after=await page.evaluate(()=>({scrollLeft:document.querySelector('#diwali-gallery-track').scrollLeft,
+                dot:document.querySelector('[data-diwali-to="1"]').getAttribute('aria-pressed')}));
+              console.log('DIWALI MANUAL CLICK',JSON.stringify(after));
               await page.waitForFunction(()=>document.querySelector('#diwali-gallery-track').scrollLeft>75,{timeout:5000});
               await page.waitForFunction(()=>document.querySelector('[data-diwali-to="1"]').getAttribute('aria-pressed')==='true',{timeout:5000});
               assert.deepEqual(errors,[],'Page JS errors: '+errors.join('; '));
