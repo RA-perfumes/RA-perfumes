@@ -332,3 +332,84 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 .product-art.is-discovery::after,
 .scent-shop .product-art.is-discovery::after{display:none!important}
 .catalog-card[href="?scent=oud"] h3{font-size:clamp(18px,2vw,30px);line-height:1.15}
+
+/* RA identity consistency: use the same artwork, not font-rendered RA initials. */
+.presentation-brand-logo{
+  display:block;width:115px;height:95px;max-width:100%;
+  object-fit:contain;object-position:left center;
+  margin:0 0 28px;
+}
+/* Festive collection — a single editorial slide after the mystery heading. */
+.diwali-feature{
+  display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:clamp(22px,5vw,76px);align-items:center;
+  margin:clamp(64px,8vw,130px) 0 clamp(60px,8vw,110px);
+  padding:clamp(24px,4vw,58px);
+  border-top:1px solid #d9bd803c;border-bottom:1px solid #d9bd803c;
+  background:linear-gradient(120deg,#2c1825,#1a0f18 74%);
+}
+.diwali-intro .eyebrow{color:var(--gold);font-size:10px;letter-spacing:.17em}
+.diwali-intro h3{
+  margin:24px 0 18px;
+  font:clamp(38px,5vw,80px)/1.1 Editorial,Georgia,serif;
+  letter-spacing:-.055em;font-weight:400;
+}
+.diwali-intro h3 em{font-weight:400;color:var(--gold)}
+.diwali-intro>p:last-child{font-size:12px;line-height:1.9;color:var(--muted);max-width:33ch}
+.diwali-gallery{
+  width:100%;min-width:0;height:clamp(350px,43vw,580px);
+  position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 30%,#482b37,#180c16 85%);
+  border:1px solid #d9bd803b;
+  isolation:isolate;
+}
+.diwali-gallery-track{
+  width:100%;height:100%;display:flex;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.diwali-gallery-track::-webkit-scrollbar{display:none}
+.diwali-gallery-slide{
+  flex:0 0 100%;width:100%;height:100%;min-width:0;
+  display:flex;justify-content:center;align-items:center;
+  margin:0;padding:12px 12px 42px;box-sizing:border-box;
+  scroll-snap-align:start;scroll-snap-stop:always;
+}
+.diwali-gallery-slide img{
+  width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;object-position:center;display:block;
+}
+.diwali-arrow{
+  position:absolute;z-index:3;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid #d9bd8073;background:#1b0e19d6;
+  color:var(--gold);font:30px/1 Georgia,serif;
+}
+.diwali-arrow:disabled{opacity:.25;cursor:default}
+.diwali-prev{left:9px}.diwali-next{right:9px}
+.diwali-dots{
+  position:absolute;z-index:3;left:50%;bottom:13px;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:4px 9px;background:#1a0b16bc;border-radius:40px;
+}
+.diwali-dots button{width:28px;height:22px;display:grid;place-items:center}
+.diwali-dots button::after{
+  content:"";display:block;width:6px;height:6px;border-radius:20px;
+  background:#d9bd8070;transition:width .2s,background .2s;
+}
+.diwali-dots button[aria-pressed="true"]::after{width:16px;background:var(--gold)}
+@media(max-width:720px){
+  .presentation-brand-logo{width:96px;height:81px;margin-bottom:18px}
+  .diwali-feature{grid-template-columns:1fr;padding:25px 12px;margin:68px 0 75px;gap:22px}
+  .diwali-intro h3{font-size:clamp(38px,10vw,54px);margin:17px 0 12px}
+  .diwali-gallery{height:clamp(350px,118vw,515px)}
+  .diwali-gallery-slide{padding:8px 8px 40px}
+  .diwali-arrow{width:33px;height:33px;font-size:27px}
+  .diwali-prev{left:5px}.diwali-next{right:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .diwali-gallery-track{scroll-behavior:auto}
+  .diwali-dots button::after{transition:none}
+}
