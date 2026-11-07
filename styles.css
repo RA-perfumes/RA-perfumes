@@ -312,3 +312,23 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
   .catalog-banner .box-gallery-track{scroll-behavior:auto}
   .catalog-banner .box-gallery-dots button::after{transition:none}
 }
+
+/* Preview: the Discovery Set has one fixed photo, not a product-page carousel.
+   Keep the existing card frame, spacing and typography unchanged. */
+.scent-shop .product-art.is-discovery #product-image,
+.product-art.is-discovery #product-image{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%;
+  max-height:100%;
+  padding:clamp(8px,1.5vw,20px);
+  box-sizing:border-box;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+.product-art.is-discovery::after,
+.scent-shop .product-art.is-discovery::after{display:none!important}
+.catalog-card[href="?scent=oud"] h3{font-size:clamp(18px,2vw,30px);line-height:1.15}
