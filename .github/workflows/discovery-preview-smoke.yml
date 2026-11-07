@@ -43,8 +43,8 @@ jobs:
                 'A soft sweetness that unfolds into warmth as evening settles.',
                 'Soft rose petals unfolding into the rich warmth of oud.'
               ]);
-              assert.equal(await page.$eval('#box-gallery-track img',els=>els.length),2);
-              const boxStories=await page.$eval('.box-gallery-caption',els=>els.map(el=>({
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('#box-gallery-track img').length),2);
+              const boxStories=await page.evaluate(()=>[...document.querySelectorAll('.box-gallery-caption')].map(el=>({
                 name:el.querySelector('strong')?.textContent.trim(),
                 detail:el.querySelector('p')?.textContent.trim(),
                 height:el.getBoundingClientRect().height
@@ -58,8 +58,8 @@ jobs:
               await page.click('#discovery-set');
               await page.waitForFunction(()=>location.search.includes('scent=discovery'));
               await page.waitForFunction(()=>!document.querySelector('.scent-shop').hidden);
-              assert.equal(await page.$eval('.scent-switch',els=>els.length),0,'no previous/next fragrance controls');
-              assert.equal(await page.$eval('#scent-position',els=>els.length),0,'no product position counter');
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('.scent-switch').length),0,'no previous/next fragrance controls');
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('#scent-position').length),0,'no product position counter');
               await page.waitForFunction(()=>document.querySelector('#product-image').naturalWidth>0);
               const set=await page.evaluate(()=>({
                 title:document.querySelector('#product-title').textContent,
