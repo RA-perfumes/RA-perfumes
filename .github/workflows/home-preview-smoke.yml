@@ -1,0 +1,67 @@
+name: RA Perfumes Homepage Preview Smoke Test
+on:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'diwali-gallery.js'
+      - '.github/workflows/home-preview-smoke.yml'
+  workflow_dispatch:
+jobs:
+  test-homepage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser driver
+        run: npm install --no-save --no-package-lock puppeteer-core
+      - name: Verify brand logo, footer link and Diwali slides on mobile
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ra-home-server.log 2>&1 &
+          node <<'JS'
+          const puppeteer=require('puppeteer-core');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const browser=await puppeteer.launch({headless:true,executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-setuid-sandbox']});
+            try{
+              const page=await browser.newPage();
+              await page.setViewport({width:390,height:844,isMobile:true,hasTouch:true,deviceScaleFactor:2});
+              const errors=[];
+              page.on('pageerror',e=>errors.push(e.message));
+              await page.goto('http://127.0.0.1:8765/',{waitUntil:'load'});
+              const data=await page.evaluate(()=>{
+                const top=document.querySelector('.brand img');
+                const logo=document.querySelector('.presentation-brand-logo');
+                const closing=document.querySelector('.closing-top');
+                const diwali=document.querySelector('#diwali-gallery');
+                return {
+                  sameLogo:top?.getAttribute('src')===logo?.getAttribute('src'),
+                  logoLoaded:logo?.complete&&logo.naturalWidth>0,
+                  bottomLink:closing?.querySelector('a'),
+                  title:document.querySelector('#diwali-title')?.textContent.trim(),
+                  slidePhotos:diwali?.querySelectorAll('.diwali-gallery-slide img').length,
+                  source:diwali?[...diwali.querySelectorAll('img')].map(x=>x.getAttribute('src')):[],
+                  track:document.querySelector('#diwali-gallery-track')?.clientWidth
+                };
+              });
+              assert.equal(data.sameLogo,true,'same original RA logo must be used');
+              assert.equal(data.logoLoaded,true,'brand logo must load');
+              assert.equal(data.bottomLink,null,'closing Explore link must be removed');
+              assert.match(data.title,/Celebrate.*Diwali.*with us/i);
+              assert.equal(data.slidePhotos,2);
+              assert(data.source.includes('assets/diwali-closed.jpg'));
+              assert(data.source.includes('assets/diwali-open.jpg'));
+              assert(data.track>100,'carousel must have width');
+              await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center'}));
+              await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
+              await page.click('[data-diwali-step="1"]');
+              await page.waitForFunction(()=>document.querySelector('#diwali-gallery-track').scrollLeft>75,{timeout:5000});
+              await page.waitForFunction(()=>document.querySelector('[data-diwali-to="1"]').getAttribute('aria-pressed')==='true',{timeout:5000});
+              assert.deepEqual(errors,[],'Page JS errors: '+errors.join('; '));
+              console.log('PASS: authentic logo, no bottom Explore link, 2 Diwali photos and slide controls');
+            }finally{await browser.close()}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
