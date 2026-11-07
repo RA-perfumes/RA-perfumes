@@ -58,6 +58,16 @@ jobs:
               await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center'}));
               await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
               await page.click('[data-diwali-step="1"]');
+              await new Promise(resolve=>setTimeout(resolve,600));
+              const debug=await page.evaluate(()=>{
+                const e=document.querySelector('#diwali-gallery-track');
+                return {scrollLeft:e.scrollLeft,clientWidth:e.clientWidth,scrollWidth:e.scrollWidth,
+                  style:getComputedStyle(e).overflowX,
+                  dot:document.querySelector('[data-diwali-to="1"]').getAttribute('aria-pressed'),
+                  nextDisabled:document.querySelector('[data-diwali-step="1"]').disabled,
+                  script:[...document.scripts].map(s=>s.src).filter(s=>s.includes('diwali'))};
+              });
+              console.log('DIWALI DEBUG',JSON.stringify({debug,errors}));
               await page.waitForFunction(()=>document.querySelector('#diwali-gallery-track').scrollLeft>75,{timeout:5000});
               await page.waitForFunction(()=>document.querySelector('[data-diwali-to="1"]').getAttribute('aria-pressed')==='true',{timeout:5000});
               assert.deepEqual(errors,[],'Page JS errors: '+errors.join('; '));
