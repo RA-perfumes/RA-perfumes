@@ -43,13 +43,23 @@ jobs:
                 'A soft sweetness that unfolds into warmth as evening settles.',
                 'Soft rose petals unfolding into the rich warmth of oud.'
               ]);
-              assert.equal(await page.$$eval('#box-gallery-track img',els=>els.length),2);
+              assert.equal(await page.$eval('#box-gallery-track img',els=>els.length),2);
+              const boxStories=await page.$eval('.box-gallery-caption',els=>els.map(el=>({
+                name:el.querySelector('strong')?.textContent.trim(),
+                detail:el.querySelector('p')?.textContent.trim(),
+                height:el.getBoundingClientRect().height
+              })));
+              assert.equal(boxStories.length,2);
+              assert.deepEqual(boxStories.map(x=>x.name),['The Signature Box','The Discovery Set']);
+              assert(boxStories.every(x=>x.detail.length>12&&x.height>50),'each slide needs its own visible description');
               await page.click('#box-showcase [data-box-step="1"]');
               await page.waitForFunction(()=>document.querySelector('#box-gallery-track').scrollLeft>70);
               console.log('PASS: two-box showcase and all new collection names');
               await page.click('#discovery-set');
               await page.waitForFunction(()=>location.search.includes('scent=discovery'));
               await page.waitForFunction(()=>!document.querySelector('.scent-shop').hidden);
+              assert.equal(await page.$eval('.scent-switch',els=>els.length),0,'no previous/next fragrance controls');
+              assert.equal(await page.$eval('#scent-position',els=>els.length),0,'no product position counter');
               await page.waitForFunction(()=>document.querySelector('#product-image').naturalWidth>0);
               const set=await page.evaluate(()=>({
                 title:document.querySelector('#product-title').textContent,
