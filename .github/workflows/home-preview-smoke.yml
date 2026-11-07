@@ -55,6 +55,13 @@ jobs:
               assert(data.source.includes('assets/diwali-closed.jpg'));
               assert(data.source.includes('assets/diwali-open.jpg'));
               assert(data.track>100,'carousel must have width');
+              const milestone=await page.$eval('.trust-milestone',el=>({
+                title:el.querySelector('strong').textContent.trim(),
+                y:el.getBoundingClientRect().top+scrollY
+              }));
+              const giftsEnd=await page.$eval('.diwali-feature',el=>el.getBoundingClientRect().bottom+scrollY);
+              assert.match(milestone.title,/10K\+ Happy Customers/i);
+              assert(milestone.y>=giftsEnd,'customer milestone must appear after gifts');
               await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center',behavior:'instant'}));
               await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
               await page.click('[data-diwali-step="1"]');
