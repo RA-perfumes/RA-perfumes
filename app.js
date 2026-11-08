@@ -38,6 +38,12 @@
       (discount?'<div class="promo-saving"><span>Promo '+promo.code+'</span><span>−'+formatPrice(discount)+'</span></div>':'')+
       '<div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(subtotal+shipping-discount)+'</strong></div></div>';
   }
+  function bagTotalsHTML(){
+    // Bag: merchandise only. Delivery is calculated on the final checkout page.
+    const subtotal=bagTotal();
+    return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
+      '<div class="bag-total"><span>Subtotal</span><strong>'+formatPrice(subtotal)+'</strong></div></div>';
+  }
   function renderCheckoutTotals(){$('#checkout-totals').innerHTML=totalsHTML();}
   function refreshDeliveryTotals(){renderCheckoutTotals();if(bagDialog.open&&!$('#bag-step').hidden)renderBag();}
   function pinStatus(text){$$('[data-pin-status]').forEach(el=>el.textContent=text);}
@@ -166,7 +172,7 @@
       $$('[data-adjust]',row).forEach(button=>button.addEventListener('click',()=>{const label=button.getAttribute('aria-label');item.qty=Math.max(0,Math.min(99,item.qty+Number(button.dataset.adjust)));if(!item.qty)bag.splice(index,1);saveBag();renderBag();const next=$$('button',items).find(el=>el.getAttribute('aria-label')===label);if(next&&!next.disabled)next.focus({preventScroll:true})}));
       $('.remove-item',row).addEventListener('click',()=>{bag.splice(index,1);saveBag();renderBag();$('#bag-title').focus({preventScroll:true})});items.append(row);
     });
-    summary.innerHTML=totalsHTML()+'<button class="primary-button" id="continue-details">Continue '+bottleControl+'</button><p class="order-note">A little closer to your signature.</p>';
+    summary.innerHTML=bagTotalsHTML()+'<button class="primary-button" id="continue-details">Continue '+bottleControl+'</button><p class="order-note">A little closer to your signature.</p>';
     $('#continue-details').addEventListener('click',()=>{
       const pin = delivery ? '?pin=' + delivery.pin : '';
       location.href = (phoneAuth.enabled ? 'login.html' : 'checkout.html') + pin;
