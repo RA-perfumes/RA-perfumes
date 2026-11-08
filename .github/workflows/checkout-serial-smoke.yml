@@ -52,19 +52,20 @@ jobs:
               await page.waitForFunction(()=>!document.querySelector('#bag-dialog').open);
               await page.goto('http://127.0.0.1:8765/checkout.html',{waitUntil:'load'});
               // PIN verification is only used for shipping in the final checkout screen.
-              await page.setRequestInterception(true);
-              page.on('request',request=>{
-                if(request.url().includes('api.postalpincode.in/pincode/600118')){
-                  return request.respond({status:200,contentType:'application/json',
-                    body:JSON.stringify([{Status:'Success',PostOffice:[{Pincode:'600118',Country:'India',State:'Tamil Nadu'}]}])});
-                }
-                request.continue();
+              await page.evaluate(()=>{
+                const originalFetch=window.fetch.bind(window);
+                window.fetch=(url,options)=>{
+                  if(String(url).includes('api.postalpincode.in/pincode/600118')){
+                    return Promise.resolve({ok:true,json:async()=>[{Status:'Success',PostOffice:[{Pincode:'600118',Country:'India',State:'Tamil Nadu'}]}]});
+                  }
+                  return originalFetch(url,options);
+                };
               });
               await page.$eval('#customer-pin',el=>{
                 el.value='600118';el.dispatchEvent(new Event('input',{bubbles:true}));
               });
               await page.click('#customer-form [data-check-pin]');
-              await page.waitForFunction(()=>document.querySelector('#checkout-totals').textContent.includes('₹49'));
+              await page.waitForFunction(()=>document.querySelector('#checkout-totals').textContent.includes('₹49'),{timeout:7000});
               const checkoutText=await page.$eval('#checkout-totals',el=>el.textContent);
               assert.match(checkoutText,/Shipping/);
               assert.match(checkoutText,/₹49/);
