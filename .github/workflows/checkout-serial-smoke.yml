@@ -41,6 +41,8 @@ jobs:
               await page.goto('http://127.0.0.1:8765/checkout.html',{waitUntil:'load'});
               await page.waitForSelector('#customer-mobile');
               assert.equal(await page.evaluate(()=>!!document.querySelector('#mobile-help')),false,'mobile helper text should be removed');
+              // The bag opens on the storefront, not on the separate details page.
+              await page.goto('http://127.0.0.1:8765/index.html',{waitUntil:'load'});
               await page.click('[data-open-bag]');
               await page.waitForSelector('#bag-dialog[open]');
               const bagText=await page.$eval('#bag-summary',el=>el.textContent);
@@ -48,6 +50,7 @@ jobs:
               assert.doesNotMatch(bagText,/Shipping|Check PIN code|Order total/,'bag should contain perfume subtotal only');
               await page.click('[data-close]');
               await page.waitForFunction(()=>!document.querySelector('#bag-dialog').open);
+              await page.goto('http://127.0.0.1:8765/checkout.html',{waitUntil:'load'});
               // PIN verification is only used for shipping in the final checkout screen.
               await page.setRequestInterception(true);
               page.on('request',request=>{
