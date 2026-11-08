@@ -89,7 +89,7 @@ function doPost(e) {
         !/^[1-9]\d{5}$/.test(pin) ||
         !items || items.length > 1500 ||
         !Number.isInteger(subtotal) || subtotal < 1 ||
-        !Number.isInteger(shipping) || ![49,149].includes(shipping) ||
+        !Number.isInteger(shipping) || ![59,79,99,149].includes(shipping) ||
         !Number.isInteger(discount) || discount < 0 ||
         !Number.isInteger(total) || total !== subtotal + shipping - discount) {
       return raJson_({success:false,error:'Invalid order information.'});
