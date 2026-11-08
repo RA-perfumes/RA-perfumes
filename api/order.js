@@ -8,9 +8,9 @@ export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
   try {
     const d = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!d || !validText(d.name,80) || !validText(d.email,150) || !validText(d.mobile,25) ||
+    if (!d || !validText(d.name,80) || !validText(d.email,150) || !validText(d.mobile,10) ||
         !validText(d.orderId,80) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email) ||
-        !/^\+?[\d ()-]{10,25}$/.test(d.mobile) || !/^[1-9]\d{5}$/.test(String(d.pincode||'')) ||
+        !/^[6-9]\d{9}$/.test(d.mobile) || !/^[1-9]\d{5}$/.test(String(d.pincode||'')) ||
         !Array.isArray(d.items) || !d.items.length || d.items.length > 9) {
       return res.status(400).json({success:false,error:'Invalid order information'});
     }
@@ -62,10 +62,16 @@ export default async function handler(req,res){
     const raw=await response.text();
     let outcome;
     try{outcome=JSON.parse(raw)}catch{throw Error('Spreadsheet service returned an unexpected response')}
-    if(!response.ok || outcome.success!==true || outcome.orderId!==payload.orderId){
+    // New Apps Script receivers assign the reference atomically after the row is saved.
+    // Older receivers can still return the internal request key during migration.
+    const assigned=typeof outcome.orderId==='string' && /^20\d{8}$/.test(outcome.orderId) &&
+      outcome.requestId===payload.orderId;
+    const legacy=outcome.orderId===payload.orderId;
+    if(!response.ok || outcome.success!==true || (!assigned&&!legacy)){
       throw Error(outcome.error||'Unable to save order');
     }
-    return res.status(200).json({success:true,orderId:payload.orderId,total:payload.total,shipping,discount,promoCode});
+    return res.status(200).json({success:true,orderId:assigned?outcome.orderId:payload.orderId,
+      requestId:payload.orderId,total:payload.total,shipping,discount,promoCode});
   }catch(error){
     console.error('RA order submission failed:',error.message);
     return res.status(502).json({success:false,error:'Could not save your order. Please try again.'});
