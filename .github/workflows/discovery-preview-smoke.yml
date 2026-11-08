@@ -52,7 +52,8 @@ jobs:
               assert.equal(boxStories.length,2);
               assert.deepEqual(boxStories.map(x=>x.name),['The Signature Box','The Discovery Set']);
               assert(boxStories.every(x=>x.detail.length>12&&x.height>50),'each slide needs its own visible description');
-              await page.click('#box-showcase [data-box-step="1"]');
+              assert.equal(await page.$eval('[data-box-step], [data-box-to]',els=>els.length),0,'no box arrows or pager');
+              await page.$eval('#box-gallery-track',el=>el.scrollTo({left:el.clientWidth,behavior:'instant'}));
               await page.waitForFunction(()=>document.querySelector('#box-gallery-track').scrollLeft>70);
               console.log('PASS: two-box showcase and all new collection names');
               await page.click('#discovery-set');
@@ -77,6 +78,15 @@ jobs:
               assert.equal(set.gallery,null,'Discovery product must have only a single image');
               await page.click('#add-selection');
               await page.waitForSelector('#bag-dialog[open]');
+              const bagStyle=await page.evaluate(()=>{
+                const img=document.querySelector('.bag-item>img');
+                const button=document.querySelector('.bag-item .quantity-controls button');
+                return {imageWidth:img.getBoundingClientRect().width,imageHeight:img.getBoundingClientRect().height,
+                  imageLoaded:img.complete&&img.naturalWidth>0,buttonWidth:button.getBoundingClientRect().width};
+              });
+              assert(bagStyle.imageLoaded,'product photo must load');
+              assert(bagStyle.imageWidth>=95,'bag product image must be prominent');
+              assert(bagStyle.imageWidth>bagStyle.buttonWidth*2.5,'quantity control must not dominate');
               await page.keyboard.press('Escape');
               for(const [key,name,photo] of [
                 ['fresh','ILAVEYIL','ilaveyil-new.jpg'],
