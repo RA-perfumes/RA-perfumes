@@ -1,0 +1,57 @@
+name: RA Checkout and Order Sequence Preview Test
+on:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - 'app.js'
+      - 'api/order.js'
+      - 'checkout.html'
+      - 'apps-script/Code.gs'
+      - 'tests/order-serial-test.cjs'
+      - '.github/workflows/checkout-serial-smoke.yml'
+  workflow_dispatch:
+jobs:
+  checkout-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test backend and Apps Script logic without placing orders
+        run: node tests/order-serial-test.cjs
+      - name: Install browser driver
+        run: npm install --no-save --no-package-lock puppeteer-core
+      - name: Check mobile input behaviour on checkout
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/ra-checkout-server.log 2>&1 &
+          node <<'JS'
+          const puppeteer=require('puppeteer-core');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const browser=await puppeteer.launch({headless:true,executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-setuid-sandbox']});
+            try{
+              const page=await browser.newPage();
+              await page.setViewport({width:390,height:844,isMobile:true,hasTouch:true,deviceScaleFactor:2});
+              await page.evaluateOnNewDocument(()=>{
+                localStorage.setItem('ra-presence-selection',JSON.stringify([{id:'fresh',size:50,qty:1}]));
+              });
+              const errs=[];
+              page.on('pageerror',e=>errs.push(e.message));
+              await page.goto('http://127.0.0.1:8765/checkout.html',{waitUntil:'load'});
+              await page.waitForSelector('#customer-mobile');
+              const prop=await page.$eval('#customer-mobile',e=>({maxlength:e.maxLength,pattern:e.pattern,keyboard:e.inputMode}));
+              assert.equal(prop.maxlength,10);assert.equal(prop.pattern,'[6-9][0-9]{9}');
+              assert.equal(prop.keyboard,'numeric');
+              await page.$eval('#customer-mobile',el=>{el.value='123abc456789045';el.dispatchEvent(new Event('input',{bubbles:true}))});
+              const sanitized=await page.$eval('#customer-mobile',e=>e.value);
+              assert.equal(sanitized,'1234567890');
+              const invalid=await page.$eval('#customer-mobile',e=>e.checkValidity());
+              assert.equal(invalid,false);
+              await page.$eval('#customer-mobile',el=>{el.value='9876543210';el.dispatchEvent(new Event('input',{bubbles:true}))});
+              assert.equal(await page.$eval('#customer-mobile',e=>e.checkValidity()),true);
+              assert.deepEqual(errs,[]);
+              console.log('PASS mobile form only accepts valid 10-digit numbers');
+            }finally{await browser.close()}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
