@@ -55,22 +55,38 @@ jobs:
               await page.evaluate(()=>{
                 const originalFetch=window.fetch.bind(window);
                 window.fetch=(url,options)=>{
-                  if(String(url).includes('api.postalpincode.in/pincode/600118')){
-                    return Promise.resolve({ok:true,json:async()=>[{Status:'Success',PostOffice:[{Pincode:'600118',Country:'India',State:'Tamil Nadu'}]}]});
+                  if(String(url).includes('api.postalpincode.in/pincode/')){
+                    const pin=String(url).split('/').pop();
+                    const zones={
+                      '600118':['Tamil Nadu','Chennai'],
+                      '602001':['Tamil Nadu','Tiruvallur'],
+                      '631502':['Tamil Nadu','Kancheepuram'],
+                      '603001':['Tamil Nadu','Chengalpattu'],
+                      '641001':['Tamil Nadu','Coimbatore'],
+                      '560001':['Karnataka','Bengaluru']
+                    };
+                    const [State,District]=zones[pin]||['Tamil Nadu',''];
+                    return Promise.resolve({ok:true,json:async()=>[{
+                      Status:'Success',PostOffice:[{Pincode:pin,Country:'India',State,District}]
+                    }]});
                   }
                   return originalFetch(url,options);
                 };
               });
-              await page.$eval('#customer-pin',el=>{
-                el.value='600118';el.dispatchEvent(new Event('input',{bubbles:true}));
-              });
-              await page.click('#customer-form [data-check-pin]');
-              await page.waitForFunction(()=>document.querySelector('#checkout-totals').textContent.includes('₹49'),{timeout:7000});
-              const checkoutText=await page.$eval('#checkout-totals',el=>el.textContent);
-              assert.match(checkoutText,/Shipping/);
-              assert.match(checkoutText,/₹49/);
-              assert.match(checkoutText,/Order total/);
-              console.log('PASS shopping bag has no shipping while final checkout displays ₹49 after PIN verification');
+              const rates=[['600118',59],['602001',79],['631502',79],['603001',79],['641001',99],['560001',149]];
+              for(const [pin,rate] of rates){
+                await page.$eval('#customer-pin',(el,value)=>{
+                  el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));
+                },pin);
+                await page.click('#customer-form [data-check-pin]');
+                await page.waitForFunction(expected=>
+                  document.querySelector('#checkout-totals').textContent.includes('₹'+expected),
+                  {timeout:7000},rate);
+                const checkoutText=await page.$eval('#checkout-totals',el=>el.textContent);
+                assert.match(checkoutText,/Shipping/);
+                assert.match(checkoutText,/Order total/);
+              }
+              console.log('PASS shopping bag has no shipping; final checkout displays four verified postal rates');
               const prop=await page.$eval('#customer-mobile',e=>({maxlength:e.maxLength,pattern:e.pattern,keyboard:e.inputMode}));
               assert.equal(prop.maxlength,10);assert.equal(prop.pattern,'[6-9][0-9]{9}');
               assert.equal(prop.keyboard,'numeric');
