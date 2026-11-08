@@ -66,8 +66,17 @@
       const states=[...new Set(usable.map(o=>o.State.trim()))];
       if(states.length!==1){pinStatus('We could not verify this PIN. Check the number and try again.');return;}
       pinCache.set(pin,records);
-      const state=states[0],charge=state.replace(/\s/g,'').toLowerCase()==='tamilnadu'?49:149;
-      delivery={pin,state,charge};pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
+      const state=states[0],normalizedState=state.replace(/[^a-z]/gi,'').toLowerCase();
+      const tamilNadu=normalizedState==='tamilnadu';
+      const districts=[...new Set(usable.map(o=>String(o.District||'').replace(/[^a-z]/gi,'').toLowerCase()).filter(Boolean))];
+      if(tamilNadu&&!districts.length){
+        pinStatus('We could not verify the delivery district. Please try again.');return;
+      }
+      const nearby=new Set(['chengalpattu','kanchipuram','kancheepuram','tiruvallur','thiruvallur']);
+      const charge=!tamilNadu?149:districts.includes('chennai')?59:
+        districts.some(d=>nearby.has(d))?79:99;
+      delivery={pin,state,district:districts[0]||'',charge};
+      pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
     }catch{if(request===pinRequest)pinStatus('Unable to check availability right now. Please try again.');}
     finally{clearTimeout(timeout);if(request===pinRequest)$$('[data-check-pin]').forEach(el=>el.disabled=false);}
   }));
