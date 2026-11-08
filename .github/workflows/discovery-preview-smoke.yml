@@ -52,7 +52,7 @@ jobs:
               assert.equal(boxStories.length,2);
               assert.deepEqual(boxStories.map(x=>x.name),['The Signature Box','The Discovery Set']);
               assert(boxStories.every(x=>x.detail.length>12&&x.height>50),'each slide needs its own visible description');
-              assert.equal(await page.$eval('[data-box-step], [data-box-to]',els=>els.length),0,'no box arrows or pager');
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('[data-box-step], [data-box-to]').length),0,'no box arrows or pager');
               await page.$eval('#box-gallery-track',el=>el.scrollTo({left:el.clientWidth,behavior:'instant'}));
               await page.waitForFunction(()=>document.querySelector('#box-gallery-track').scrollLeft>70);
               console.log('PASS: two-box showcase and all new collection names');
