@@ -471,3 +471,63 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 .trust-milestone strong span{color:#e5c585}
 .trust-milestone p{font-size:11px;line-height:1.6;color:#cfbfc1;margin:0}
 @media(max-width:700px){.trust-milestone{margin-bottom:56px}.trust-milestone strong{font-size:31px}}
+
+/* 08 Nov preview: no visible arrows / dot pagers. Slides still swipe and autoplay where enabled. */
+.catalog-banner .box-gallery-arrow,
+.catalog-banner .box-gallery-dots,
+.diwali-gallery .diwali-arrow,
+.diwali-gallery .diwali-dots,
+.discovery-gallery-arrow,
+.discovery-gallery-dots{display:none!important}
+.catalog-banner .box-gallery-caption{padding-bottom:14px!important;min-height:76px}
+.diwali-gallery-slide{padding-bottom:12px}
+@media(max-width:700px){
+  .catalog-banner .box-gallery-caption{padding-bottom:12px!important;min-height:102px}
+  .diwali-gallery-slide{padding-bottom:8px}
+}
+/* Image-first bag design: larger bottle photo, quieter quantity controls. */
+.bag-item{
+  grid-template-columns:118px minmax(0,1fr);
+  column-gap:16px;row-gap:6px;
+  align-items:start;min-width:0;
+}
+.bag-item>img{
+  display:block;grid-column:1;grid-row:1 / span 2;
+  width:118px;height:153px;
+  object-fit:contain;
+  background:linear-gradient(140deg,#402436,#1e111c);
+  border:1px solid #d9bd8038;
+  border-radius:4px;
+}
+.bag-item>div:not(.item-end){grid-column:2;grid-row:1;min-width:0}
+.bag-item h3{overflow-wrap:anywhere;line-height:1.06;margin:0 0 5px}
+.bag-item .quantity-controls{margin-top:12px;gap:7px}
+.bag-item .quantity-controls button{
+  width:34px;height:34px;min-width:34px;
+  border:1px solid #a8866c80;
+  border-radius:4px;background:transparent;
+  font-size:17px;font-weight:400;line-height:1;
+  color:var(--ink);
+}
+.bag-item .quantity-controls span{width:19px;font-size:12px}
+.bag-item .item-end{
+  grid-column:2;grid-row:2;min-width:0;
+  display:flex;flex-direction:row;align-items:baseline;
+  justify-content:space-between;gap:8px;
+  margin-top:3px;
+}
+.bag-item .item-end .item-price{font-size:15px;order:0;text-align:left}
+.bag-item .item-end .remove-item{font-size:10px;order:1}
+@media(max-width:700px){
+  .bag-item{grid-template-columns:112px minmax(0,1fr);column-gap:13px;row-gap:7px}
+  .bag-item>img{width:112px;height:144px}
+  .bag-item h3{font-size:clamp(23px,6vw,29px)}
+  .bag-item .quantity-controls button{width:34px;height:34px;min-width:34px}
+  .bag-item .item-end{gap:8px}
+}
+@media(max-width:380px){
+  .bag-item{grid-template-columns:100px minmax(0,1fr);gap:8px}
+  .bag-item>img{width:100px;height:136px}
+  .bag-item h3{font-size:22px}
+  .bag-item .item-end{flex-wrap:wrap;gap:2px 12px}
+}
