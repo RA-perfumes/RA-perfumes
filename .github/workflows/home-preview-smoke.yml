@@ -64,7 +64,7 @@ jobs:
               assert(milestone.y>=giftsEnd,'customer milestone must appear after gifts');
               await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center',behavior:'instant'}));
               await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
-              assert.equal(await page.$eval('[data-diwali-step], [data-diwali-to]',els=>els.length),0,'no gift arrows or dot controls');
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('[data-diwali-step], [data-diwali-to]').length),0,'no gift arrows or dot controls');
               await page.$eval('#diwali-gallery-track',el=>el.scrollTo({left:el.clientWidth,behavior:'instant'}));
               await page.waitForFunction(()=>document.querySelector('#diwali-gallery-track').scrollLeft>75,{timeout:5000});
               assert.deepEqual(errors,[],'Page JS errors: '+errors.join('; '));
