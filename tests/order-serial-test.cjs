@@ -31,7 +31,7 @@ const assert=require('node:assert/strict');
   vm.createContext(ctx);vm.runInContext(script,ctx);
   const request=(token,mobile='9876543210')=>({postData:{contents:JSON.stringify({
     orderId:token,name:'Test Customer',email:'test@example.com',mobile,pincode:'600039',
-    items:'ILAVEYIL 50ml x 1',subtotal:599,shipping:49,discount:0,total:648
+    items:'ILAVEYIL 50ml x 1',subtotal:599,shipping:59,discount:0,total:658
   })}});
   const post=x=>JSON.parse(ctx.doPost(x).text);
   const one=post(request('RA-TEST-00000001'));
@@ -52,7 +52,19 @@ const assert=require('node:assert/strict');
     let calls=0;
     const fakeFetch=async(url,opts)=>{
       calls++;
-      if(String(url).includes('postalpincode'))return{ok:true,json:async()=>[{PostOffice:[{Pincode:'600039',Country:'India',State:'Tamil Nadu'}]}]};
+      if(String(url).includes('postalpincode')){
+        const pin=String(url).split('/').pop();
+        const areas={
+          '600039':['Tamil Nadu','Chennai'],
+          '602001':['Tamil Nadu','Tiruvallur'],
+          '631502':['Tamil Nadu','Kancheepuram'],
+          '603001':['Tamil Nadu','Chengalpattu'],
+          '641001':['Tamil Nadu','Coimbatore'],
+          '560001':['Karnataka','Bengaluru']
+        };
+        const [State,District]=areas[pin]||['Tamil Nadu',''];
+        return {ok:true,json:async()=>[{PostOffice:[{Pincode:pin,Country:'India',State,District}]}]};
+      }
       const d=JSON.parse(opts.body);
       return {ok:true,text:async()=>JSON.stringify(receiverSerial?{success:true,orderId:'2026000100',requestId:d.orderId}:{success:true,orderId:d.orderId})};
     };
@@ -65,12 +77,21 @@ const assert=require('node:assert/strict');
   const ok=await call(order);
   assert.equal(ok.outcome.status,200);assert.equal(ok.outcome.orderId,'2026000100');
   assert.equal(ok.outcome.requestId,order.orderId);
-  assert.equal(ok.outcome.shipping,49);
+  assert.equal(ok.outcome.shipping,59);
+  const zones=[
+    ['602001',79],['631502',79],['603001',79],
+    ['641001',99],['560001',149]
+  ];
+  for(const [pincode,expected] of zones){
+    const output=await call({...order,pincode});
+    assert.equal(output.outcome.status,200, 'valid shipping zone '+pincode);
+    assert.equal(output.outcome.shipping,expected,'delivery charge for '+pincode);
+  }
   const legacy=await call(order,false);
   assert.equal(legacy.outcome.orderId,order.orderId);
   const bad=await call({...order,mobile:'+919876543210'});
   assert.equal(bad.outcome.status,400);assert.equal(bad.calls,0);
   const badTwo=await call({...order,mobile:'987654321'});
   assert.equal(badTwo.outcome.status,400);assert.equal(badTwo.calls,0);
-  console.log('PASS Vercel bridge accepts sequential receiver replies and rejects non-10-digit phones');
+  console.log('PASS Vercel bridge validates district-based shipping ₹59 / ₹79 / ₹99 / ₹149 and 10-digit phone');
 })().catch(e=>{console.error(e);process.exitCode=1});
