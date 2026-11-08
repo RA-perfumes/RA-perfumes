@@ -191,7 +191,7 @@
       $('#customer-form').hidden = true;
       phoneAuth.request('user', null, sessionStorage.getItem('ra-auth')).then(user => {
         if (!user.phone_confirmed_at) throw new Error();
-        verifiedPhone = '+' + user.phone.replace(/^\+/, '');
+        verifiedPhone = String(user.phone||'').replace(/\D/g,'').replace(/^91(?=[6-9]\d{9}$)/,'');
         mobileInput.value = verifiedPhone;
         mobileInput.readOnly = true;
         $('#customer-form').hidden = false;
@@ -199,8 +199,9 @@
     }
   }
   function validateName(){nameInput.setCustomValidity(nameInput.value.trim().length>=2?'':'Please enter your full name.');return nameInput.validity.valid}
-  function validateMobile(){const value=mobileInput.value.trim(),digits=value.replace(/\D/g,'');const valid=/^\+?[\d\s()-]+$/.test(value)&&digits.length>=10&&digits.length<=15;mobileInput.setCustomValidity(valid?'':'Please enter a valid mobile number, including country code if outside India.');return valid}
-  nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));mobileInput.addEventListener('input',()=>mobileInput.setCustomValidity(''));
+  function validateMobile(){const valid=/^[6-9]\d{9}$/.test(mobileInput.value);mobileInput.setCustomValidity(valid?'':'Enter exactly 10 digits, beginning with 6, 7, 8 or 9.');return valid}
+  nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));
+  mobileInput.addEventListener('input',()=>{const digits=mobileInput.value.replace(/\D/g,'').slice(0,10);if(mobileInput.value!==digits)mobileInput.value=digits;mobileInput.setCustomValidity('')});
   $('#customer-form').addEventListener('submit',async event=>{
     event.preventDefault();
     if(phoneAuth.enabled && !verifiedPhone)return;
@@ -224,10 +225,12 @@
         body:JSON.stringify({orderId,...customer,pincode:delivery.pin,promoCode:promo?.code||'',items:bag.map(({id,size,qty})=>({id,size,qty}))})
       });
       const saved=await result.json();
-      if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
+      const serialAssigned=/^20\d{8}$/.test(String(saved.orderId||'')) && saved.requestId===orderId;
+      if(!result.ok||saved.success!==true||!(saved.orderId===orderId||serialAssigned))throw Error(saved.error||'Order not saved');
+      const confirmedOrderId=serialAssigned?saved.orderId:orderId;
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
         bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(itemPrice(item)*item.qty)).join('\n\n')+
-        '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
+        '\n\nOrder ID: '+confirmedOrderId+'\nSubtotal: '+formatPrice(bagTotal())+
         '\nShipping: '+formatPrice(saved.shipping)+
         (saved.promoCode?'\nPromo '+saved.promoCode+': −'+formatPrice(saved.discount):'')+'\nOrder total: '+formatPrice(saved.total)+
         '\n\nName: '+customer.name+'\nMobile: '+customer.mobile+'\nEmail: '+customer.email+
