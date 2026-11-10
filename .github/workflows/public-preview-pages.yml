@@ -1,0 +1,53 @@
+name: Publish RA Perfumes public staging preview
+on:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - 'index.html'
+      - 'the-scent.html'
+      - 'checkout.html'
+      - 'login.html'
+      - 'styles.css'
+      - 'app.js'
+      - 'film.js'
+      - 'diwali-gallery.js'
+      - 'box-gallery.js'
+      - 'assets/**'
+      - '.github/workflows/public-preview-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ra-pages-preview
+  cancel-in-progress: false
+jobs:
+  publish-preview:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Build site from actual preview website files
+        run: |
+          set -eu
+          mkdir -p _site
+          cp index.html the-scent.html checkout.html login.html styles.css app.js film.js diwali-gallery.js box-gallery.js _site/
+          cp -R assets _site/assets
+          echo "This is a preview. Order submission is not available on the static preview host." > _site/PREVIEW-NOTICE.txt
+          du -sh _site
+      - name: Configure public GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy live preview
+        id: deployment
+        uses: actions/deploy-pages@v4
