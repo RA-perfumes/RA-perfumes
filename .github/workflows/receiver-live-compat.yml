@@ -1,0 +1,29 @@
+name: Validate current Sheets receiver compatibility
+on:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - '.github/workflows/receiver-live-compat.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe existing order receiver with identifiable test orders
+        run: |
+          python3 - <<'PY'
+          import urllib.request,json,uuid,datetime
+          url="https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec"
+          for price in [59,79,99,149]:
+            ident="RA-DEPLOY-TEST-"+uuid.uuid4().hex[:12].upper()
+            req=json.dumps(dict(name="TEST ORDER PLEASE DELETE",email="preview-test@example.invalid",mobile="6000000000",pincode="600039" if price!=149 else "560001",orderId=ident,
+            items="TEST Discovery Set 3 x 10ml x 1",subtotal=199,shipping=price,promoCode="",discount=0,total=199+price)).encode()
+            try:
+              request=urllib.request.Request(url,data=req,headers={"Content-Type":"text/plain;charset=utf-8"},method="POST")
+              with urllib.request.urlopen(request,timeout=25) as response:
+                data=response.read().decode('utf-8')[:700]
+                print(json.dumps({"charge":price,"testOrderId":ident,"http":response.status,"result":data}))
+            except Exception as e:
+              print(json.dumps({"charge":price,"testOrderId":ident,"error":str(e)}))
+          PY
