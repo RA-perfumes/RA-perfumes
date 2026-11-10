@@ -36,6 +36,17 @@ jobs:
                 body:(document.body?.innerText||'').slice(0,440),
                 html:(document.documentElement?.outerHTML||'').slice(0,220)
               }))));
+              if((await page.title()).includes('External Content Notice')){
+                const links=await page.$eval('a',els=>els.map(a=>({text:a.textContent.trim(),href:a.href})));
+                console.log('NOTICE LINKS',JSON.stringify(links.slice(0,12)));
+                const button=await page.$('a,button');
+                for(const handle of button){
+                  const label=await handle.evaluate(e=>e.textContent.trim());
+                  if(label.toLowerCase().includes('open the page')){await handle.click();break}
+                }
+                await new Promise(resolve=>setTimeout(resolve,1200));
+                console.log('AFTER NOTICE',JSON.stringify(await page.evaluate(()=>({title:document.title,url:location.href,gifts:document.querySelectorAll('#diwali-gallery').length}))));
+              }
               await page.waitForSelector('#diwali-gallery .diwali-next',{timeout:20000});
               const visibility=await page.evaluate(()=>{
                 const next=document.querySelector('#diwali-gallery .diwali-next');
