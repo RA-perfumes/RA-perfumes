@@ -28,7 +28,14 @@ jobs:
               const pageerrors=[];page.on('pageerror',e=>pageerrors.push(e.message));
               const result=await page.goto(base+'index.html',{waitUntil:'domcontentloaded',timeout:30000});
               assert.equal(result.status(),200);
-              console.log('REMOTE PAGE DEBUG',JSON.stringify({url:page.url(),status:result.status(),title:await page.title(),gifts:await page.$eval('#diwali-gallery',xs=>xs.length),arrows:await page.$eval('.diwali-next',xs=>xs.length),body:(await page.$eval('body',el=>el.innerText)).slice(0,250)}));
+              console.log('REMOTE PAGE DEBUG',JSON.stringify(await page.evaluate(()=>({
+                url:location.href,
+                title:document.title,
+                gifts:document.querySelectorAll('#diwali-gallery').length,
+                arrows:document.querySelectorAll('.diwali-next').length,
+                body:(document.body?.innerText||'').slice(0,440),
+                html:(document.documentElement?.outerHTML||'').slice(0,220)
+              }))));
               await page.waitForSelector('#diwali-gallery .diwali-next',{timeout:20000});
               const visibility=await page.evaluate(()=>{
                 const next=document.querySelector('#diwali-gallery .diwali-next');
