@@ -64,9 +64,15 @@ jobs:
               assert(milestone.y>=giftsEnd,'customer milestone must appear after gifts');
               await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center',behavior:'instant'}));
               await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
-              assert.equal(await page.evaluate(()=>document.querySelectorAll('[data-diwali-step], [data-diwali-to]').length),0,'no gift arrows or dot controls');
-              await page.$eval('#diwali-gallery-track',el=>el.scrollTo({left:el.clientWidth,behavior:'instant'}));
+              const arrows=await page.$eval('.diwali-gallery .diwali-arrow',els=>els.map(el=>({
+                visible:getComputedStyle(el).display!=='none',enabled:!el.disabled
+              })));
+              assert.equal(arrows.length,2,'two accessible gift-slide arrows');
+              assert(arrows.every(arrow=>arrow.visible),'gift arrows must be visible via CSS');
+              assert.equal(await page.evaluate(()=>document.querySelectorAll('.diwali-dots').length),0,'no numbered or dot indicators');
+              await page.$eval('.diwali-gallery .diwali-next',el=>el.click());
               await page.waitForFunction(()=>document.querySelector('#diwali-gallery-track').scrollLeft>75,{timeout:5000});
+              await page.waitForFunction(()=>!document.querySelector('.diwali-gallery .diwali-prev').disabled,{timeout:5000});
               assert.deepEqual(errors,[],'Page JS errors: '+errors.join('; '));
               console.log('PASS: authentic logo, no bottom Explore link, 2 gift photos, swipe track without controls');
             }finally{await browser.close()}
