@@ -32,6 +32,11 @@ jobs:
               const errors=[];
               page.on('pageerror',e=>errors.push(e.message));
               await page.goto('http://127.0.0.1:8765/',{waitUntil:'load'});
+              await page.$eval('.presentation-brand-logo',el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+              await page.waitForFunction(()=>{
+                const logo=document.querySelector('.presentation-brand-logo');
+                return !!logo && logo.complete && logo.naturalWidth>0;
+              },{timeout:10000});
               const data=await page.evaluate(()=>{
                 const top=document.querySelector('.brand img');
                 const logo=document.querySelector('.presentation-brand-logo');
