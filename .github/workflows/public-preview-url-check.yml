@@ -1,0 +1,32 @@
+name: Verify public RA preview links
+on:
+  workflow_dispatch:
+  push:
+    branches: [preview-discovery-gallery-20261103]
+    paths:
+      - '.github/workflows/public-preview-url-check.yml'
+jobs:
+  find-public-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch URLs without dashboard login
+        shell: bash
+        run: |
+          set +e
+          for url in \
+            "https://ra-perfumes-git-preview-discovery-gallery-20261103-ra-perfumes.vercel.app" \
+            "https://ra-perfumes-git-preview-discovery-gallery-20261103.vercel.app" \
+            "https://ra-perfumes-git-preview-discovery-gallery-20261103-ra-perfumes-projects.vercel.app" \
+            "https://ra-perfumes-kziwp9ihd-ra-perfumes.vercel.app" \
+            "https://ra-perfumes-9u9ep8q3m-ra-perfumes.vercel.app"
+          do
+            echo "=== $url ==="
+            h=$(mktemp)
+            b=$(mktemp)
+            curl -LsS --max-time 15 -D "$h" -o "$b" "$url"
+            echo "HTTP $(head -n 1 "$h")"
+            grep -Ei '^(location|x-vercel-id|content-type):' "$h" | head -n 5
+            echo "BRAND=$(grep -Eo 'ILAVEYIL|RA Perfumes|Vercel Authentication|Login' "$b" | head -n 3 | tr '\n' ',')"
+            echo "SIZE=$(wc -c < "$b")"
+            rm -f "$h" "$b"
+          done
