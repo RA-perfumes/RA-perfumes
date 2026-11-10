@@ -214,14 +214,29 @@
     }
   }
   function validateName(){nameInput.setCustomValidity(nameInput.value.trim().length>=2?'':'Please enter your full name.');return nameInput.validity.valid}
-  function validateMobile(){const valid=/^[6-9]\d{9}$/.test(mobileInput.value);mobileInput.setCustomValidity(valid?'':'Enter exactly 10 digits, beginning with 6, 7, 8 or 9.');return valid}
+  function validateMobile(showError=false){
+    const valid=/^[6-9]\d{9}$/.test(mobileInput.value);
+    const error=$('#mobile-error');
+    mobileInput.setCustomValidity(valid?'':'Invalid number');
+    mobileInput.setAttribute('aria-invalid',String(!valid&&showError));
+    if(error)error.hidden=valid||!showError;
+    return valid;
+  }
   nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));
-  mobileInput.addEventListener('input',()=>{const digits=mobileInput.value.replace(/\D/g,'').slice(0,10);if(mobileInput.value!==digits)mobileInput.value=digits;mobileInput.setCustomValidity('')});
+  mobileInput.addEventListener('input',()=>{
+    const digits=mobileInput.value.replace(/\D/g,'').slice(0,10);
+    if(mobileInput.value!==digits)mobileInput.value=digits;
+    const error=$('#mobile-error');
+    if(error&&!error.hidden)validateMobile(true);
+    else { mobileInput.setCustomValidity('');mobileInput.removeAttribute('aria-invalid'); }
+  });
   $('#customer-form').addEventListener('submit',async event=>{
     event.preventDefault();
     if(phoneAuth.enabled && !verifiedPhone)return;
     if(!bag.length){$('#order-feedback').textContent='Your bag is empty.';return;}
-    validateName();validateMobile();if(!event.currentTarget.reportValidity())return;
+    validateName();
+    if(!validateMobile(true)){mobileInput.focus();return;}
+    if(!event.currentTarget.reportValidity())return;
     if(!delivery){$('#order-feedback').textContent='Please check your delivery PIN code before continuing.';$('#customer-pin').focus();return;}
     if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#order-feedback').textContent='Online ordering is temporarily unavailable.';return;}
     const customer={name:nameInput.value.trim(),mobile:mobileInput.value.trim(),email:emailInput.value.trim()};
