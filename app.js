@@ -10,10 +10,10 @@
   // Contact details stay local until Continue opens the business WhatsApp chat.
   const WHATSAPP_NUMBER='918939429631';
   const products={
-    discovery:{name:'Discovery Set',image:'assets/ra-mark.webp',story:'Three distinctive expressions of RA Perfumes, together for your first discovery.',description:'Fresh, Arena & Oud · 3 × 10 ml'},
-    fresh:{name:'Fresh',image:'assets/fresh-clear.webp',moodImage:'assets/sweet-lime.webp',moodAlt:'Sweet lime on dark stone with ivory silk',inspiration:'Sweet lime',description:'Sweet lime sets the mood. The rest is a quiet secret, made personal by the way you wear it.',story:'A sunlit orchard. The delicate brightness of sweet lime. Fresh is an invitation to begin again, with an ivory-light elegance that feels entirely your own.',quote:'Sweet lime in the morning light.\nA little radiance, just for you.'},
-    arena:{name:'Arena',image:'assets/arena-clear.webp',moodImage:'assets/blackcurrant-amber.webp',moodAlt:'Blackcurrants, ruby silk and glowing amber resin',inspiration:'Blackcurrant & amber',description:'Blackcurrant and amber inspire a darker mood. Some impressions are better felt than explained.',story:'The evening turns a deeper shade. Inspired by blackcurrant and the glow of amber, Arena imagines a world of ruby light and unhurried closeness. For nights that deserve their own signature.',quote:'Dark fruit. Warm amber.\nAn invitation to come closer.'},
-    oud:{name:'Oud',image:'assets/oud-clear.webp',moodImage:'assets/notes-wood.webp',moodAlt:'Natural wood textures, an earthy fragrance inspiration',inspiration:'Oud & warm woods',description:'Warm woods. A golden stillness. A fragrance mood that keeps its most personal secrets close.',story:'Warm wood. Golden light. A moment held in stillness. Oud evokes a measured, assured elegance, for those drawn to depth and the pleasure of taking their time.',quote:'The warmth of wood.\nThe quiet confidence of gold.'}
+    discovery:{name:'Discovery Set',image:'assets/discovery-set-new.jpg',story:'Explore all three signatures in one set: ILAVEYIL, IRAVÉ and French Rose Oud. Three 10 ml perfumes.',description:'ILAVEYIL · IRAVÉ · French Rose Oud · 3 × 10 ml'},
+    fresh:{name:'ILAVEYIL',image:'assets/ilaveyil-new.jpg',moodImage:'assets/ilaveyil-new.jpg',moodAlt:'ILAVEYIL perfume in warm morning light',inspiration:'Sweet lime',description:'Sweet-lime freshness that captures the feeling of a new morning.',story:'Sweet-lime freshness that captures the feeling of a new morning.',quote:'Sweet-lime freshness that captures the feeling of a new morning.'},
+    arena:{name:'IRAVÉ',image:'assets/irave-new.jpg',moodImage:'assets/irave-new.jpg',moodAlt:'IRAVÉ perfume in a soft evening glow',inspiration:'Soft sweetness',description:'A soft sweetness that unfolds into warmth as evening settles.',story:'A soft sweetness that unfolds into warmth as evening settles.',quote:'A soft sweetness that unfolds into warmth as evening settles.'},
+    oud:{name:'French Rose Oud',image:'assets/french-rose-oud-new.jpg',moodImage:'assets/french-rose-oud-new.jpg',moodAlt:'French Rose Oud perfume beside a rose and warm oud wood',inspiration:'Rose & oud',description:'Soft rose petals unfolding into the rich warmth of oud.',story:'Soft rose petals unfolding into the rich warmth of oud.',quote:'Soft rose petals unfolding into the rich warmth of oud.'}
   };
   const productDialog=$('#product-dialog'),bagDialog=$('#bag-dialog');
   let bag=[],currentProduct='fresh',currentSize=50,toastTimer,orderMessage='';
@@ -34,9 +34,15 @@
     const subtotal=bagTotal();
     const shipping=delivery?.charge||0;
     return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
-      '<div><span>Shipping</span><span>'+(delivery?formatPrice(shipping):'Check PIN code')+'</span></div>'+
+      (delivery?'<div><span>Shipping</span><span>'+formatPrice(shipping)+'</span></div>':'')+
       (discount?'<div class="promo-saving"><span>Promo '+promo.code+'</span><span>−'+formatPrice(discount)+'</span></div>':'')+
       '<div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(subtotal+shipping-discount)+'</strong></div></div>';
+  }
+  function bagTotalsHTML(){
+    // Bag: merchandise only. Delivery is calculated on the final checkout page.
+    const subtotal=bagTotal();
+    return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
+      '<div class="bag-total"><span>Subtotal</span><strong>'+formatPrice(subtotal)+'</strong></div></div>';
   }
   function renderCheckoutTotals(){$('#checkout-totals').innerHTML=totalsHTML();}
   function refreshDeliveryTotals(){renderCheckoutTotals();if(bagDialog.open&&!$('#bag-step').hidden)renderBag();}
@@ -60,8 +66,17 @@
       const states=[...new Set(usable.map(o=>o.State.trim()))];
       if(states.length!==1){pinStatus('We could not verify this PIN. Check the number and try again.');return;}
       pinCache.set(pin,records);
-      const state=states[0],charge=state.replace(/\s/g,'').toLowerCase()==='tamilnadu'?49:149;
-      delivery={pin,state,charge};pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
+      const state=states[0],normalizedState=state.replace(/[^a-z]/gi,'').toLowerCase();
+      const tamilNadu=normalizedState==='tamilnadu';
+      const districts=[...new Set(usable.map(o=>String(o.District||'').replace(/[^a-z]/gi,'').toLowerCase()).filter(Boolean))];
+      if(tamilNadu&&!districts.length){
+        pinStatus('We could not verify the delivery district. Please try again.');return;
+      }
+      const nearby=new Set(['chengalpattu','kanchipuram','kancheepuram','tiruvallur','thiruvallur']);
+      const charge=!tamilNadu?149:districts.includes('chennai')?59:
+        districts.some(d=>nearby.has(d))?79:99;
+      delivery={pin,state,district:districts[0]||'',charge};
+      pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
     }catch{if(request===pinRequest)pinStatus('Unable to check availability right now. Please try again.');}
     finally{clearTimeout(timeout);if(request===pinRequest)$$('[data-check-pin]').forEach(el=>el.disabled=false);}
   }));
@@ -111,14 +126,21 @@
     currentProduct=id;
     $('#product-title').textContent=product.name;
     $('.product-story').textContent=product.story;
-    $('#product-image').src=product.image;
-    $('#product-image').alt=id==='discovery'?'RA Perfumes Discovery Set: Fresh, Arena and Oud, three 10 ml bottles':product.name+' by RA Perfumes, minimal transparent glass bottle';
+    const image=$('#product-image');
+    image.src=product.image;
+    image.alt=id==='discovery'?'RA Perfumes Discovery Set containing ILAVEYIL, IRAVÉ and French Rose Oud, three 10 ml bottles':product.name+' by RA Perfumes';
+    image.hidden=false;
     const isSet=id==='discovery';
     $('.product-art',productDialog).classList.toggle('is-discovery',isSet);
     $('.sizes',productDialog).hidden=isSet;
-    $('#product-original').hidden=isSet;
-    if(isSet){currentSize=30;$('#product-price').textContent=formatPrice(199);$('#product-size-caption').textContent='3 × 10 ml';}
-    else setSize(50);
+    if(shop){const navigation=$('.scent-switch');if(navigation)navigation.hidden=isSet;}
+    $('#product-original').hidden=false;
+    if(isSet){
+      currentSize=30;
+      $('#product-original').textContent=formatPrice(399);
+      $('#product-price').textContent=formatPrice(199);
+      $('#product-size-caption').textContent='3 × 10 ml';
+    }else setSize(50);
     if(!shop)openDialog(productDialog);
   }
   document.addEventListener('click',event=>{const button=event.target.closest('[data-product]');if(button)location.href='the-scent.html?scent='+button.dataset.product});
@@ -155,11 +177,11 @@
     bag.forEach((item,index)=>{
       const product=products[item.id],row=document.createElement('div');row.className='bag-item';
       // Only closed, validated catalogue values are interpolated. Customer text uses textContent.
-      row.innerHTML='<img src="'+product.image+'" alt="'+product.name+' bottle" width="76" height="92"><div><h3>'+product.name+'</h3><small>'+itemSizeLabel(item)+' · Eau de parfum</small><div class="quantity-controls"><button aria-label="Reduce '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="-1">−</button><span aria-label="Quantity">'+item.qty+'</span><button aria-label="Increase '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="1"'+(item.qty===99?' disabled':'')+'>+</button></div></div><div class="item-end"><span class="item-price">'+formatPrice(itemPrice(item)*item.qty)+'</span><button class="remove-item" aria-label="Remove '+product.name+' '+itemSizeLabel(item)+'">Remove</button></div>';
+      row.innerHTML='<img src="'+product.image+'" alt="'+product.name+' perfume" width="112" height="142"><div><h3>'+product.name+'</h3><small>'+itemSizeLabel(item)+' · Eau de parfum</small><div class="quantity-controls"><button aria-label="Reduce '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="-1">−</button><span aria-label="Quantity">'+item.qty+'</span><button aria-label="Increase '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="1"'+(item.qty===99?' disabled':'')+'>+</button></div></div><div class="item-end"><span class="item-price">'+formatPrice(itemPrice(item)*item.qty)+'</span><button class="remove-item" aria-label="Remove '+product.name+' '+itemSizeLabel(item)+'">Remove</button></div>';
       $$('[data-adjust]',row).forEach(button=>button.addEventListener('click',()=>{const label=button.getAttribute('aria-label');item.qty=Math.max(0,Math.min(99,item.qty+Number(button.dataset.adjust)));if(!item.qty)bag.splice(index,1);saveBag();renderBag();const next=$$('button',items).find(el=>el.getAttribute('aria-label')===label);if(next&&!next.disabled)next.focus({preventScroll:true})}));
       $('.remove-item',row).addEventListener('click',()=>{bag.splice(index,1);saveBag();renderBag();$('#bag-title').focus({preventScroll:true})});items.append(row);
     });
-    summary.innerHTML=totalsHTML()+'<button class="primary-button" id="continue-details">Continue '+bottleControl+'</button><p class="order-note">A little closer to your signature.</p>';
+    summary.innerHTML=bagTotalsHTML()+'<button class="primary-button" id="continue-details">Continue '+bottleControl+'</button><p class="order-note">A little closer to your signature.</p>';
     $('#continue-details').addEventListener('click',()=>{
       const pin = delivery ? '?pin=' + delivery.pin : '';
       location.href = (phoneAuth.enabled ? 'login.html' : 'checkout.html') + pin;
@@ -184,7 +206,7 @@
       $('#customer-form').hidden = true;
       phoneAuth.request('user', null, sessionStorage.getItem('ra-auth')).then(user => {
         if (!user.phone_confirmed_at) throw new Error();
-        verifiedPhone = '+' + user.phone.replace(/^\+/, '');
+        verifiedPhone = String(user.phone||'').replace(/\D/g,'').replace(/^91(?=[6-9]\d{9}$)/,'');
         mobileInput.value = verifiedPhone;
         mobileInput.readOnly = true;
         $('#customer-form').hidden = false;
@@ -192,13 +214,29 @@
     }
   }
   function validateName(){nameInput.setCustomValidity(nameInput.value.trim().length>=2?'':'Please enter your full name.');return nameInput.validity.valid}
-  function validateMobile(){const value=mobileInput.value.trim(),digits=value.replace(/\D/g,'');const valid=/^\+?[\d\s()-]+$/.test(value)&&digits.length>=10&&digits.length<=15;mobileInput.setCustomValidity(valid?'':'Please enter a valid mobile number, including country code if outside India.');return valid}
-  nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));mobileInput.addEventListener('input',()=>mobileInput.setCustomValidity(''));
+  function validateMobile(showError=false){
+    const valid=/^[6-9]\d{9}$/.test(mobileInput.value);
+    const error=$('#mobile-error');
+    mobileInput.setCustomValidity(valid?'':'Invalid number');
+    mobileInput.setAttribute('aria-invalid',String(!valid&&showError));
+    if(error)error.hidden=valid||!showError;
+    return valid;
+  }
+  nameInput.addEventListener('input',()=>nameInput.setCustomValidity(''));
+  mobileInput.addEventListener('input',()=>{
+    const digits=mobileInput.value.replace(/\D/g,'').slice(0,10);
+    if(mobileInput.value!==digits)mobileInput.value=digits;
+    const error=$('#mobile-error');
+    if(error&&!error.hidden)validateMobile(true);
+    else { mobileInput.setCustomValidity('');mobileInput.removeAttribute('aria-invalid'); }
+  });
   $('#customer-form').addEventListener('submit',async event=>{
     event.preventDefault();
     if(phoneAuth.enabled && !verifiedPhone)return;
     if(!bag.length){$('#order-feedback').textContent='Your bag is empty.';return;}
-    validateName();validateMobile();if(!event.currentTarget.reportValidity())return;
+    validateName();
+    if(!validateMobile(true)){mobileInput.focus();return;}
+    if(!event.currentTarget.reportValidity())return;
     if(!delivery){$('#order-feedback').textContent='Please check your delivery PIN code before continuing.';$('#customer-pin').focus();return;}
     if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#order-feedback').textContent='Online ordering is temporarily unavailable.';return;}
     const customer={name:nameInput.value.trim(),mobile:mobileInput.value.trim(),email:emailInput.value.trim()};
@@ -217,10 +255,12 @@
         body:JSON.stringify({orderId,...customer,pincode:delivery.pin,promoCode:promo?.code||'',items:bag.map(({id,size,qty})=>({id,size,qty}))})
       });
       const saved=await result.json();
-      if(!result.ok||saved.success!==true||saved.orderId!==orderId)throw Error(saved.error||'Order not saved');
+      const serialAssigned=/^20\d{8}$/.test(String(saved.orderId||'')) && saved.requestId===orderId;
+      if(!result.ok||saved.success!==true||!(saved.orderId===orderId||serialAssigned))throw Error(saved.error||'Order not saved');
+      const confirmedOrderId=serialAssigned?saved.orderId:orderId;
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
         bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(itemPrice(item)*item.qty)).join('\n\n')+
-        '\n\nOrder ID: '+orderId+'\nSubtotal: '+formatPrice(bagTotal())+
+        '\n\nOrder ID: '+confirmedOrderId+'\nSubtotal: '+formatPrice(bagTotal())+
         '\nShipping: '+formatPrice(saved.shipping)+
         (saved.promoCode?'\nPromo '+saved.promoCode+': −'+formatPrice(saved.discount):'')+'\nOrder total: '+formatPrice(saved.total)+
         '\n\nName: '+customer.name+'\nMobile: '+customer.mobile+'\nEmail: '+customer.email+
@@ -240,28 +280,7 @@
     $('.catalog').hidden = true;
     shop.hidden = false;
     $('.skip').href = '#fragrance-detail';
-    const keys = ['fresh','arena','oud','discovery'];
-    const requested = new URLSearchParams(location.search).get('scent');
-    let position = keys.includes(requested) ? keys.indexOf(requested) : 0;
-    function selectFragrance(offset) {
-      position = (position + offset + keys.length) % keys.length;
-      const id = keys[position];
-      showProduct(id);
-      $('#scent-position').textContent = products[id].name + ' · ' + (position + 1) + ' / ' + keys.length;
-      history.replaceState(null, '', '?scent=' + id);
-    }
-    $('#prev-perfume').onclick = () => selectFragrance(-1);
-    $('#next-perfume').onclick = () => selectFragrance(1);
-    let start;
-    const art = $('.product-art');
-    art.addEventListener('touchstart', e => { start = e.touches[0]; }, {passive:true});
-    art.addEventListener('touchend', e => {
-      if (!start) return;
-      const end = e.changedTouches[0], dx = end.clientX - start.clientX;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(end.clientY - start.clientY)) selectFragrance(dx < 0 ? 1 : -1);
-      start = null;
-    });
-    selectFragrance(0);
+    showProduct(new URLSearchParams(location.search).get('scent'));
   }
   const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.08});
   if(!reduce.matches)document.body.classList.add('js-motion');$$('.reveal').forEach(el=>observer.observe(el));

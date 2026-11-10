@@ -165,3 +165,406 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
   .catalog-card#discovery-set h3{font-size:clamp(17px,4.3vw,21px)}
   .catalog-grid>.catalog-card>div>b{margin-top:14px}
 }
+
+/* Preview: Discovery Set detail has a quiet swipeable photo gallery. */
+.scent-shop .product-art.is-discovery{
+  position:relative;
+  height:min(70svh,650px);
+  min-height:460px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#371a2b,#1b1019);
+  touch-action:auto;
+}
+.scent-shop .product-art.is-discovery::after{display:none}
+.scent-shop .product-art.is-discovery #product-image{display:none!important}
+.scent-shop .product-art .discovery-gallery{
+  position:absolute;inset:0;z-index:2;overflow:hidden;
+}
+.scent-shop .discovery-gallery-track{
+  width:100%;height:100%;display:flex;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+}
+.scent-shop .discovery-gallery-track::-webkit-scrollbar{display:none}
+.scent-shop .discovery-gallery-panel{
+  flex:0 0 100%;height:100%;min-width:0;
+  margin:0;padding:18px 20px 51px;
+  scroll-snap-align:center;scroll-snap-stop:always;
+  display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;
+}
+.scent-shop .product-art.is-discovery .discovery-gallery-panel img{
+  position:static;display:block;flex:0 1 auto;
+  inset:auto;left:auto;top:auto;
+  width:100%;height:100%;max-width:100%;max-height:100%;
+  border-radius:5px;object-fit:contain;
+}
+.discovery-gallery-arrow{
+  position:absolute;top:50%;z-index:4;
+  width:38px;height:38px;border-radius:50%;
+  display:grid;place-items:center;
+  color:var(--gold);
+  background:#20101cc9;border:1px solid #d9b47765;
+  transform:translateY(-50%);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+  font:32px/1 Georgia,serif;
+}
+.discovery-gallery-prev{left:8px}
+.discovery-gallery-next{right:8px}
+.discovery-gallery-arrow:disabled{opacity:.24;cursor:default}
+.discovery-gallery-dots{
+  position:absolute;bottom:14px;left:50%;z-index:5;
+  transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:3px 8px;border-radius:99px;
+  background:#20101cbc;
+}
+.discovery-gallery-dots button{
+  position:relative;width:28px;height:26px;display:grid;place-items:center;
+}
+.discovery-gallery-dots button::after{
+  content:"";display:block;width:6px;height:6px;border-radius:50%;
+  background:#d9bd8080;transition:width .2s,background .2s;
+}
+.discovery-gallery-dots button[aria-pressed="true"]::after{
+  width:17px;border-radius:99px;background:var(--gold);
+}
+@media(max-width:700px){
+  .scent-shop .product-art.is-discovery{
+    height:clamp(310px,56svh,520px);min-height:310px;touch-action:auto;
+  }
+  .scent-shop .discovery-gallery-panel{padding:12px 15px 52px}
+  .discovery-gallery-arrow{width:34px;height:34px;font-size:27px}
+  .discovery-gallery-prev{left:5px}
+  .discovery-gallery-next{right:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .scent-shop .discovery-gallery-track{scroll-behavior:auto}
+  .discovery-gallery-dots button::after{transition:none}
+}
+
+/* Contained presentation photograph in the existing square Discovery Set card. */
+.catalog-card#discovery-set .discovery-card-art{position:relative}
+.catalog-card#discovery-set .discovery-card-art>img{
+  display:block;width:100%;height:100%;aspect-ratio:auto!important;
+  object-fit:contain!important;object-position:center;
+  padding:clamp(8px,1.3vw,18px);box-sizing:border-box;min-height:0;min-width:0;
+}
+
+/* The Scent: slideshow occupies only the original banner photograph's frame. */
+.catalog-banner .catalog-banner-gallery{
+  position:relative;align-self:stretch;min-width:0;width:100%;
+  height:clamp(210px,24vw,310px);padding:0;
+  overflow:hidden;background:#331a29;
+  isolation:isolate;
+}
+.catalog-banner .box-gallery-track{
+  display:flex;width:100%;height:100%;padding:0;
+  align-self:stretch;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.catalog-banner .box-gallery-track::-webkit-scrollbar{display:none}
+.catalog-banner .box-gallery-track img{
+  display:block;flex:0 0 100%;min-width:100%;max-width:100%;
+  width:100%;height:100%;object-fit:cover;object-position:center;
+  scroll-snap-align:start;scroll-snap-stop:always;
+}
+.catalog-banner .box-gallery-track img:nth-child(2){
+  object-fit:contain;object-position:center;
+  padding:6px;background:#381a28;
+}
+.catalog-banner .box-gallery-arrow{
+  position:absolute;z-index:3;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:30px;height:30px;
+  border:1px solid #d9b47785;border-radius:50%;
+  color:var(--gold);background:#21111ec9;font:27px/1 Georgia,serif;
+}
+.catalog-banner .box-gallery-previous{left:7px}
+.catalog-banner .box-gallery-next{right:7px}
+.catalog-banner .box-gallery-arrow:hover{background:#301d2ae8}
+.catalog-banner .box-gallery-dots{
+  position:absolute;z-index:3;bottom:8px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:3px 8px;background:#20101bb8;border-radius:50px;
+}
+.catalog-banner .box-gallery-dots button{
+  width:25px;height:20px;display:grid;place-items:center;
+}
+.catalog-banner .box-gallery-dots button::after{
+  content:"";display:block;width:6px;height:6px;border-radius:20px;
+  background:#d9b47780;transition:background .2s,width .2s;
+}
+.catalog-banner .box-gallery-dots button[aria-pressed="true"]::after{
+  width:15px;background:var(--gold);
+}
+@media(max-width:700px){
+  .catalog-banner .catalog-banner-gallery{height:190px}
+  .catalog-banner .box-gallery-track img:nth-child(2){padding:3px}
+  .catalog-banner .box-gallery-arrow{width:28px;height:28px;font-size:25px}
+  .catalog-banner .box-gallery-previous{left:4px}
+  .catalog-banner .box-gallery-next{right:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .catalog-banner .box-gallery-track{scroll-behavior:auto}
+  .catalog-banner .box-gallery-dots button::after{transition:none}
+}
+
+/* Preview: the Discovery Set has one fixed photo, not a product-page carousel.
+   Keep the existing card frame, spacing and typography unchanged. */
+.scent-shop .product-art.is-discovery #product-image,
+.product-art.is-discovery #product-image{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%;
+  max-height:100%;
+  padding:clamp(8px,1.5vw,20px);
+  box-sizing:border-box;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+.product-art.is-discovery::after,
+.scent-shop .product-art.is-discovery::after{display:none!important}
+.catalog-card[href="?scent=oud"] h3{font-size:clamp(18px,2vw,30px);line-height:1.15}
+
+/* RA identity consistency: use the same artwork, not font-rendered RA initials. */
+.presentation-brand-logo{
+  display:block;width:115px;height:95px;max-width:100%;
+  object-fit:contain;object-position:left center;
+  margin:0 0 28px;
+}
+/* Festive collection — a single editorial slide after the mystery heading. */
+.diwali-feature{
+  display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:clamp(22px,5vw,76px);align-items:center;
+  margin:clamp(64px,8vw,130px) 0 clamp(60px,8vw,110px);
+  padding:clamp(24px,4vw,58px);
+  border-top:1px solid #d9bd803c;border-bottom:1px solid #d9bd803c;
+  background:linear-gradient(120deg,#2c1825,#1a0f18 74%);
+}
+.diwali-intro .eyebrow{color:var(--gold);font-size:10px;letter-spacing:.17em}
+.diwali-intro h3{
+  margin:24px 0 18px;
+  font:clamp(38px,5vw,80px)/1.1 Editorial,Georgia,serif;
+  letter-spacing:-.055em;font-weight:400;
+}
+.diwali-intro h3 em{font-weight:400;color:var(--gold)}
+.diwali-intro>p:last-child{font-size:12px;line-height:1.9;color:var(--muted);max-width:33ch}
+.diwali-gallery{
+  width:100%;min-width:0;height:clamp(350px,43vw,580px);
+  position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 30%,#482b37,#180c16 85%);
+  border:1px solid #d9bd803b;
+  isolation:isolate;
+}
+.diwali-gallery-track{
+  width:100%;height:100%;display:flex;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.diwali-gallery-track::-webkit-scrollbar{display:none}
+.diwali-gallery-slide{
+  flex:0 0 100%;width:100%;height:100%;min-width:0;
+  display:flex;justify-content:center;align-items:center;
+  margin:0;padding:12px 12px 42px;box-sizing:border-box;
+  scroll-snap-align:start;scroll-snap-stop:always;
+}
+.diwali-gallery-slide img{
+  width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;object-position:center;display:block;
+}
+.diwali-arrow{
+  position:absolute;z-index:3;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid #d9bd8073;background:#1b0e19d6;
+  color:var(--gold);font:30px/1 Georgia,serif;
+}
+.diwali-arrow:disabled{opacity:.25;cursor:default}
+.diwali-prev{left:9px}.diwali-next{right:9px}
+.diwali-dots{
+  position:absolute;z-index:3;left:50%;bottom:13px;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:4px 9px;background:#1a0b16bc;border-radius:40px;
+}
+.diwali-dots button{width:28px;height:22px;display:grid;place-items:center}
+.diwali-dots button::after{
+  content:"";display:block;width:6px;height:6px;border-radius:20px;
+  background:#d9bd8070;transition:width .2s,background .2s;
+}
+.diwali-dots button[aria-pressed="true"]::after{width:16px;background:var(--gold)}
+@media(max-width:720px){
+  .presentation-brand-logo{width:96px;height:81px;margin-bottom:18px}
+  .diwali-feature{grid-template-columns:1fr;padding:25px 12px;margin:68px 0 75px;gap:22px}
+  .diwali-intro h3{font-size:clamp(38px,10vw,54px);margin:17px 0 12px}
+  .diwali-gallery{height:clamp(350px,118vw,515px)}
+  .diwali-gallery-slide{padding:8px 8px 40px}
+  .diwali-arrow{width:33px;height:33px;font-size:27px}
+  .diwali-prev{left:5px}.diwali-next{right:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .diwali-gallery-track{scroll-behavior:auto}
+  .diwali-dots button::after{transition:none}
+}
+
+/* Distinct box collection slides. Keep The Scent's existing half-and-half banner. */
+.catalog-banner .catalog-banner-gallery{height:clamp(330px,30vw,420px);padding:0;min-height:0}
+.catalog-banner .box-gallery-track{height:100%;padding:0;align-self:stretch}
+.catalog-banner .box-gallery-slide{
+  flex:0 0 100%;width:100%;min-width:0;height:100%;
+  display:flex;flex-direction:column;scroll-snap-align:start;
+  scroll-snap-stop:always;overflow:hidden;
+  padding:0;background:linear-gradient(155deg,#3d2030,#271723);
+}
+.catalog-banner .box-gallery-visual{
+  flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;padding:12px 14px 3px!important;background:#2c1725;
+}
+.catalog-banner .box-gallery-visual img{
+  display:block;width:100%;height:100%;min-height:0;min-width:0;
+  max-width:100%;max-height:100%;object-fit:contain!important;
+  object-position:center!important;padding:0!important;
+}
+.catalog-banner .box-gallery-caption{
+  flex:0 0 auto;min-width:0;min-height:88px;padding:10px 43px 31px!important;
+  display:flex;flex-direction:column;justify-content:center;
+  text-align:center;
+}
+.catalog-banner .box-gallery-caption strong{
+  font:clamp(16px,2.1vw,26px)/1.1 Editorial,Georgia,serif;
+  letter-spacing:-.018em;font-weight:400;color:#f4e5d1;
+}
+.catalog-banner .box-gallery-caption p{
+  font-size:clamp(10px,1vw,12px);line-height:1.5;
+  max-width:31ch;margin:6px auto 0;color:#cbb7b2;
+}
+.catalog-banner .box-gallery-arrow{top:38%;z-index:5}
+.catalog-banner .box-gallery-dots{bottom:5px;z-index:5}
+@media(max-width:700px){
+  .catalog-banner .catalog-banner-gallery{height:320px}
+  .catalog-banner .box-gallery-visual{padding:7px 5px 2px!important}
+  .catalog-banner .box-gallery-caption{min-height:116px;padding:7px 9px 35px!important}
+  .catalog-banner .box-gallery-caption strong{font-size:18px;line-height:1.07}
+  .catalog-banner .box-gallery-caption p{font-size:10px;line-height:1.4;margin-top:6px}
+  .catalog-banner .box-gallery-arrow{top:33%}
+  .catalog-banner .box-gallery-previous{left:4px}
+  .catalog-banner .box-gallery-next{right:4px}
+}
+/* One chosen scent at a time, with the original back-to-collection link and delivery check. */
+.scent-shop .scent-switch{display:none!important}
+.scent-shop .product-art{touch-action:pan-y}
+/* Gold customer milestone, placed after the gifts (no change to the surrounding sections). */
+.trust-milestone{
+  max-width:1050px;margin:0 auto 70px;padding:20px 16px 10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:13px;color:var(--gold);
+}
+.trust-milestone-rule{width:72px;height:1px;background:linear-gradient(90deg,transparent,#d9bd80,transparent)}
+.trust-milestone strong{font:clamp(26px,3.3vw,48px)/1.15 Editorial,Georgia,serif;font-weight:400;letter-spacing:-.025em;color:#f3dbab;text-shadow:0 0 22px #d9bd8047}
+.trust-milestone strong span{color:#e5c585}
+.trust-milestone p{font-size:11px;line-height:1.6;color:#cfbfc1;margin:0}
+@media(max-width:700px){.trust-milestone{margin-bottom:56px}.trust-milestone strong{font-size:31px}}
+
+/* 08 Nov preview: no visible arrows / dot pagers. Slides still swipe and autoplay where enabled. */
+.catalog-banner .box-gallery-arrow,
+.catalog-banner .box-gallery-dots,
+.diwali-gallery .diwali-arrow,
+.diwali-gallery .diwali-dots,
+.discovery-gallery-arrow,
+.discovery-gallery-dots{display:none!important}
+.catalog-banner .box-gallery-caption{padding-bottom:14px!important;min-height:76px}
+.diwali-gallery-slide{padding-bottom:12px}
+@media(max-width:700px){
+  .catalog-banner .box-gallery-caption{padding-bottom:12px!important;min-height:102px}
+  .diwali-gallery-slide{padding-bottom:8px}
+}
+/* Image-first bag design: larger bottle photo, quieter quantity controls. */
+.bag-item{
+  grid-template-columns:118px minmax(0,1fr);
+  column-gap:16px;row-gap:6px;
+  align-items:start;min-width:0;
+}
+.bag-item>img{
+  display:block;grid-column:1;grid-row:1 / span 2;
+  width:118px;height:153px;
+  object-fit:contain;
+  background:linear-gradient(140deg,#402436,#1e111c);
+  border:1px solid #d9bd8038;
+  border-radius:4px;
+}
+.bag-item>div:not(.item-end){grid-column:2;grid-row:1;min-width:0}
+.bag-item h3{overflow-wrap:anywhere;line-height:1.06;margin:0 0 5px}
+.bag-item .quantity-controls{margin-top:12px;gap:7px}
+.bag-item .quantity-controls button{
+  width:34px;height:34px;min-width:34px;
+  border:1px solid #a8866c80;
+  border-radius:4px;background:transparent;
+  font-size:17px;font-weight:400;line-height:1;
+  color:var(--ink);
+}
+.bag-item .quantity-controls span{width:19px;font-size:12px}
+.bag-item .item-end{
+  grid-column:2;grid-row:2;min-width:0;
+  display:flex;flex-direction:row;align-items:baseline;
+  justify-content:space-between;gap:8px;
+  margin-top:3px;
+}
+.bag-item .item-end .item-price{font-size:15px;order:0;text-align:left}
+.bag-item .item-end .remove-item{font-size:10px;order:1}
+@media(max-width:700px){
+  .bag-item{grid-template-columns:112px minmax(0,1fr);column-gap:13px;row-gap:7px}
+  .bag-item>img{width:112px;height:144px}
+  .bag-item h3{font-size:clamp(23px,6vw,29px)}
+  .bag-item .quantity-controls button{width:34px;height:34px;min-width:34px}
+  .bag-item .item-end{gap:8px}
+}
+@media(max-width:380px){
+  .bag-item{grid-template-columns:100px minmax(0,1fr);gap:8px}
+  .bag-item>img{width:100px;height:136px}
+  .bag-item h3{font-size:22px}
+  .bag-item .item-end{flex-wrap:wrap;gap:2px 12px}
+}
+
+/* Preview refinement: restore clear arrows for Gifts ONLY; keep all other carousel controls hidden. */
+.diwali-gallery .diwali-arrow{
+  display:grid!important;
+  width:46px;height:46px;
+  z-index:6;
+  border:1px solid #d9bd80b3;
+  background:#21121dda;
+  color:#eed19b;
+  box-shadow:0 4px 22px #0006;
+  font:34px/1 Georgia,serif;
+  transition:background .2s ease,border-color .2s ease;
+}
+.diwali-gallery .diwali-arrow:hover,
+.diwali-gallery .diwali-arrow:focus-visible{
+  background:#4c2a3d;
+  border-color:#f3d5a0;
+}
+.diwali-gallery .diwali-arrow:disabled{visibility:hidden!important}
+.diwali-gallery .diwali-prev{left:14px}
+.diwali-gallery .diwali-next{right:14px}
+@media(max-width:720px){
+  .diwali-gallery .diwali-arrow{width:42px;height:42px;font-size:30px}
+  .diwali-gallery .diwali-prev{left:10px}
+  .diwali-gallery .diwali-next{right:10px}
+}
+/* Checkout: a short error replaces the browser's generic format tooltip. */
+.mobile-error{
+  display:block;
+  color:#e4a7a7;
+  font-size:12px;
+  line-height:1.5;
+  margin-top:7px;
+  letter-spacing:.01em;
+}
+.mobile-error[hidden]{display:none!important}
+#customer-mobile[aria-invalid="true"]{border-color:#c68186}
