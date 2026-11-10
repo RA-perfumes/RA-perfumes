@@ -531,3 +531,40 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
   .bag-item h3{font-size:22px}
   .bag-item .item-end{flex-wrap:wrap;gap:2px 12px}
 }
+
+/* Preview refinement: restore clear arrows for Gifts ONLY; keep all other carousel controls hidden. */
+.diwali-gallery .diwali-arrow{
+  display:grid!important;
+  width:46px;height:46px;
+  z-index:6;
+  border:1px solid #d9bd80b3;
+  background:#21121dda;
+  color:#eed19b;
+  box-shadow:0 4px 22px #0006;
+  font:34px/1 Georgia,serif;
+  transition:background .2s ease,border-color .2s ease;
+}
+.diwali-gallery .diwali-arrow:hover,
+.diwali-gallery .diwali-arrow:focus-visible{
+  background:#4c2a3d;
+  border-color:#f3d5a0;
+}
+.diwali-gallery .diwali-arrow:disabled{visibility:hidden!important}
+.diwali-gallery .diwali-prev{left:14px}
+.diwali-gallery .diwali-next{right:14px}
+@media(max-width:720px){
+  .diwali-gallery .diwali-arrow{width:42px;height:42px;font-size:30px}
+  .diwali-gallery .diwali-prev{left:10px}
+  .diwali-gallery .diwali-next{right:10px}
+}
+/* Checkout: a short error replaces the browser's generic format tooltip. */
+.mobile-error{
+  display:block;
+  color:#e4a7a7;
+  font-size:12px;
+  line-height:1.5;
+  margin-top:7px;
+  letter-spacing:.01em;
+}
+.mobile-error[hidden]{display:none!important}
+#customer-mobile[aria-invalid="true"]{border-color:#c68186}
