@@ -21,7 +21,10 @@ jobs:
             "https://ra-perfumes-9u9ep8q3m-ra-perfumes.vercel.app" \
             "https://raw.githack.com/RA-perfumes/RA-perfumes/preview-discovery-gallery-20261103/index.html" \
             "https://raw.githack.com/RA-perfumes/RA-perfumes/preview-discovery-gallery-20261103/checkout.html" \
-            "https://raw.githack.com/RA-perfumes/RA-perfumes/preview-discovery-gallery-20261103/styles.css"
+            "https://raw.githack.com/RA-perfumes/RA-perfumes/preview-discovery-gallery-20261103/styles.css" \
+            "https://cdn.jsdelivr.net/gh/RA-perfumes/RA-perfumes@f9989a9eac616a6361d24e43b10d2072a02d9dca/index.html" \
+            "https://cdn.jsdelivr.net/gh/RA-perfumes/RA-perfumes@f9989a9eac616a6361d24e43b10d2072a02d9dca/checkout.html" \
+            "https://gitcdn.link/cdn/RA-perfumes/RA-perfumes/preview-discovery-gallery-20261103/index.html"
           do
             echo "=== $url ==="
             h=$(mktemp)
