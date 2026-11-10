@@ -64,7 +64,7 @@ jobs:
               assert(milestone.y>=giftsEnd,'customer milestone must appear after gifts');
               await page.$eval('#diwali-gallery',el=>el.scrollIntoView({block:'center',behavior:'instant'}));
               await page.waitForFunction(()=>[...document.querySelectorAll('.diwali-gallery-slide img')].every(i=>i.complete&&i.naturalWidth>0),{timeout:15000});
-              const arrows=await page.$eval('.diwali-gallery .diwali-arrow',els=>els.map(el=>({
+              const arrows=await page.$$eval('.diwali-gallery .diwali-arrow',els=>els.map(el=>({
                 visible:getComputedStyle(el).display!=='none',enabled:!el.disabled
               })));
               assert.equal(arrows.length,2,'two accessible gift-slide arrows');
