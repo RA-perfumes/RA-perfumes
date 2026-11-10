@@ -34,7 +34,7 @@
     const subtotal=bagTotal();
     const shipping=delivery?.charge||0;
     return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
-      '<div><span>Shipping</span><span>'+(delivery?formatPrice(shipping):'Check PIN code')+'</span></div>'+
+      (delivery?'<div><span>Shipping</span><span>'+formatPrice(shipping)+'</span></div>':'')+
       (discount?'<div class="promo-saving"><span>Promo '+promo.code+'</span><span>−'+formatPrice(discount)+'</span></div>':'')+
       '<div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(subtotal+shipping-discount)+'</strong></div></div>';
   }
