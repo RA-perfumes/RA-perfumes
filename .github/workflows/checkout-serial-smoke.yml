@@ -105,8 +105,15 @@ jobs:
               assert.equal(sanitized,'1234567890');
               const invalid=await page.$eval('#customer-mobile',e=>e.checkValidity());
               assert.equal(invalid,false);
+              assert.equal(await page.evaluate(()=>document.querySelector('#customer-form').hasAttribute('novalidate')),true);
+              assert.equal(await page.$eval('#mobile-error',e=>e.hidden),true);
+              await page.$eval('#customer-form',form=>form.requestSubmit());
+              await page.waitForFunction(()=>!document.querySelector('#mobile-error').hidden);
+              assert.equal(await page.$eval('#mobile-error',e=>e.textContent.trim()),'Invalid number');
+              assert.equal(await page.$eval('#customer-mobile',e=>e.validationMessage),'Invalid number');
               await page.$eval('#customer-mobile',el=>{el.value='9876543210';el.dispatchEvent(new Event('input',{bubbles:true}))});
               assert.equal(await page.$eval('#customer-mobile',e=>e.checkValidity()),true);
+              assert.equal(await page.$eval('#mobile-error',e=>e.hidden),true,'error clears on valid number');
               assert.deepEqual(errs,[]);
               console.log('PASS mobile form only accepts valid 10-digit numbers');
             }finally{await browser.close()}
