@@ -1,4 +1,4 @@
-/* RA Perfumes — gifting two-photo gallery. Native swipe and visible photo arrows, no numbered labels. */
+/* RA Perfumes — gifting two-photo gallery. Swipe or use arrows to switch images; no numbered labels. */
 (() => {
   'use strict';
   const root=document.querySelector('#diwali-gallery');
