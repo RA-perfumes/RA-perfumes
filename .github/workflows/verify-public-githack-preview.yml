@@ -39,7 +39,7 @@ jobs:
               if((await page.title()).includes('External Content Notice')){
                 const links=await page.$eval('a',els=>els.map(a=>({text:a.textContent.trim(),href:a.href})));
                 console.log('NOTICE LINKS',JSON.stringify(links.slice(0,12)));
-                const button=await page.$('a,button');
+                const button=await page.$$('a,button');
                 for(const handle of button){
                   const label=await handle.evaluate(e=>e.textContent.trim());
                   if(label.toLowerCase().includes('open the page')){await handle.click();break}
