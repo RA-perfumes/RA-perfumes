@@ -31,7 +31,15 @@
 
   // Postal directory adapted from GeoNames (download.geonames.org/export/zip/IN.zip),
   // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
-  function directoryRecords(pin){return null;}
+  let postalDirectory;
+  async function directoryRecords(pin){
+    postalDirectory ??= fetch('/assets/postal-states.json').then(response=>{
+      if(!response.ok)throw Error('Directory unavailable');
+      return response.json();
+    }).catch(()=>{postalDirectory=null;return {};});
+    const state=(await postalDirectory)[pin];
+    return state?[{Status:'Success',PostOffice:[{State:state,Pincode:pin,Country:'India'}]}]:null;
+  }
   const pinCache=new Map();
   function privateSavings(items){
     return items.reduce((discount,item)=>{
@@ -94,7 +102,7 @@
     delivery=null;refreshDeliveryTotals();$$('[data-check-pin]').forEach(el=>el.disabled=true);pinStatus('Checking your delivery area…');
     const timeout=setTimeout(()=>controller.abort(),15000);
     try{
-      let records=pinCache.get(pin) || directoryRecords(pin);
+      let records=pinCache.get(pin) || await directoryRecords(pin);
       if(!records){const response=await fetch('https://api.postalpincode.in/pincode/'+pin,{signal:controller.signal,referrerPolicy:'no-referrer'});if(!response.ok)throw new Error();records=await response.json();}
       if(request!==pinRequest)return;
       const offices=records?.[0]?.Status==='Success'?records[0].PostOffice:[];

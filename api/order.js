@@ -1,4 +1,6 @@
 // RA Perfumes order receiver — server-side bridge to Google Apps Script.
+import {createRequire} from 'node:module';
+const postalStates=createRequire(import.meta.url)('../assets/postal-states.json');
 import {createHash} from 'node:crypto';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 const PRICES = {30:499,50:799,100:1499};
@@ -27,14 +29,18 @@ export default async function handler(req,res){
     }
     if(subtotal>1000000)return res.status(400).json({success:false,error:'Order amount too high'});
     // Confirm state on the server: don't trust a browser-provided shipping fee.
-    const postal=await fetch('https://api.postalpincode.in/pincode/'+d.pincode,{signal:AbortSignal.timeout(9000)});
-    if(!postal.ok)throw Error('PIN verification service unavailable');
-    const results=await postal.json();
-    const offices=(results?.[0]?.PostOffice||[])
-      .filter(o=>String(o.Pincode)===String(d.pincode)&&o.Country==='India'&&o.State);
-    const states=[...new Set(offices.map(o=>o.State.trim()))];
-    if(states.length!==1)return res.status(400).json({success:false,error:'Unable to verify PIN code'});
-    const tamilNadu=states[0].replace(/[^a-z]/gi,'').toLowerCase()==='tamilnadu';
+    let state=postalStates[String(d.pincode)];
+    if(!state){
+      const postal=await fetch('https://api.postalpincode.in/pincode/'+d.pincode,{signal:AbortSignal.timeout(9000)});
+      if(!postal.ok)throw Error('PIN verification service unavailable');
+      const results=await postal.json();
+      const offices=(results?.[0]?.PostOffice||[])
+        .filter(o=>String(o.Pincode)===String(d.pincode)&&o.Country==='India'&&o.State);
+      const states=[...new Set(offices.map(o=>o.State.trim()))];
+      if(states.length!==1)return res.status(400).json({success:false,error:'Unable to verify PIN code'});
+      state=states[0];
+    }
+    const tamilNadu=state.replace(/[^a-z]/gi,'').toLowerCase()==='tamilnadu';
     let promoCode='',discount=0;
     if(d.promoCode){
       promoCode=String(d.promoCode).trim().toUpperCase();
