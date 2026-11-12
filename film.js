@@ -16,11 +16,23 @@ const smooth=v=>{v=clamp(v);return v*v*(3-2*v)};
     video.addEventListener('seeked',releaseSeek);
     function stop(){if(raf!==null)cancelAnimationFrame(raf);raf=null;lastTick=0}
     function tick(now){if(!scrubOn||!visible||document.hidden){stop();return}const dt=Math.min(100,now-(lastTick||now-16.667));lastTick=now;shown+=(target-shown)*(1-Math.pow(1-.16,dt/16.667));const settled=Math.abs(target-shown)<.0004;if(settled)shown=target;renderBands(shown);if(ready)requestSeek(shown*video.duration);if(settled){raf=null;lastTick=0}else raf=requestAnimationFrame(tick)}
-    function scroll(){if(!scrubOn)return;target=heroProgress();if(raf===null&&visible&&!document.hidden)raf=requestAnimationFrame(tick)}
+    function scroll(){if(!scrubOn||hero.closest("main").hidden)return;target=heroProgress();if(raf===null&&visible&&!document.hidden)raf=requestAnimationFrame(tick)}
     function failVideo(){failed=true;ready=false;seeking=false;pending=null;clearTimeout(seekTimer);stage.classList.remove('is-loading','video-ready');video.removeAttribute('src');stage.classList.add('video-failed');applyMode()}
     video.addEventListener('error',failVideo);
-    async function loadVideo(){if(started)return;started=true;stage.classList.add('is-loading');loadController=new AbortController();let watchdog=setTimeout(()=>loadController.abort(),20000);try{const response=await fetch('assets/presence.mp4',{signal:loadController.signal,priority:'low'});if(!response.ok)throw new Error('Film unavailable');const total=Number(response.headers.get('Content-Length'))||2600000;let got=0;const chunks=[];if(response.body){const reader=response.body.getReader();for(;;){const part=await reader.read();if(part.done)break;clearTimeout(watchdog);watchdog=setTimeout(()=>loadController.abort(),20000);chunks.push(part.value);got+=part.value.length;stage.style.setProperty('--loading',String(100*(1-clamp(got/total))))}}else chunks.push(await response.arrayBuffer());clearTimeout(watchdog);blobURL=URL.createObjectURL(new Blob(chunks,{type:'video/mp4'}));video.addEventListener('loadeddata',()=>{ready=true;stage.classList.remove('is-loading');stage.classList.add('video-ready');target=heroProgress();shown=target;renderBands(shown);requestSeek(shown*video.duration)},{once:true});video.src=blobURL;video.load()}catch{clearTimeout(watchdog);if(!loadController.signal.aborted||scrubOn)failVideo()}}
-    function applyMode(){const on=!queries.some(q=>q.matches)&&!failed;document.body.classList.toggle('static-hero',!on);if(on){if(!scrubOn){scrubOn=true;addEventListener('scroll',scroll,{passive:true});cache.forEach(c=>{c.o=-1;c.k=-1;c.active=null});loadVideo()}target=heroProgress();shown=target;renderBands(shown);scroll()}else{scrubOn=false;removeEventListener('scroll',scroll);stop();bands.forEach((b,i)=>{b.style.opacity=i===0?'1':'0';b.style.setProperty('--k','1');b.inert=i!==0;b.setAttribute('aria-hidden',String(i!==0))});stage.style.setProperty('--frame-scale','1');stage.style.setProperty('--progress','0');video.pause()}}
+    function loadVideo(){
+ if(started)return;
+ started=true;
+ video.defaultMuted=true;
+ video.muted=true;
+ video.addEventListener('loadeddata',()=>{
+   ready=true;
+   stage.classList.add('video-ready');
+   scroll();
+ },{once:true});
+ 
+ video.load();
+}
+function applyMode(){const on=!queries.some(q=>q.matches)&&!failed;document.body.classList.toggle('static-hero',!on);if(on){if(!scrubOn){scrubOn=true;addEventListener('scroll',scroll,{passive:true});cache.forEach(c=>{c.o=-1;c.k=-1;c.active=null});loadVideo()}target=heroProgress();shown=target;renderBands(shown);scroll()}else{scrubOn=false;removeEventListener('scroll',scroll);stop();bands.forEach((b,i)=>{b.style.opacity=i===0?'1':'0';b.style.setProperty('--k','1');b.inert=i!==0;b.setAttribute('aria-hidden',String(i!==0))});stage.style.setProperty('--frame-scale','1');stage.style.setProperty('--progress','0');video.pause()}}
     queries.forEach(q=>q.addEventListener('change',applyMode));addEventListener('resize',scroll,{passive:true});
     new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)scroll();else stop()},{threshold:0}).observe(hero);
     document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('paused',document.hidden);if(document.hidden){stop()}else scroll()});

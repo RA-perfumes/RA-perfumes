@@ -4,16 +4,16 @@
   const $$=(selector,root=document)=>[...root.querySelectorAll(selector)];
   const reduce=matchMedia('(prefers-reduced-motion: reduce)');
   const bottleControl='<span class="arrow-disc perfume-disc" aria-hidden="true"><svg class="perfume-icon" viewBox="0 0 32 36" fill="none" aria-hidden="true"><rect x="11" y="3" width="10" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M13 8v4m6-4v4" stroke="currentColor" stroke-width="1.3"/><rect x="6" y="12" width="20" height="21" rx="5" stroke="currentColor" stroke-width="1.3"/><path d="M10 16v10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="m16 19 3 4-3 4-3-4 3-4Z" fill="currentColor" opacity=".65"/></svg></span>';
-  const prices={30:399,50:599,100:1299};
-  const originalPrices={30:499,50:999,100:999*1.75};
+  const prices={30:499,50:799,100:1499};
+  const originalPrices={30:599,50:999,100:1599};
   const formatPrice=value=>'₹'+value.toLocaleString('en-IN');
   // Contact details stay local until Continue opens the business WhatsApp chat.
   const WHATSAPP_NUMBER='918939429631';
   const products={
     discovery:{name:'Discovery Set',image:'assets/discovery-set-new.jpg',story:'Explore all three signatures in one set: ILAVEYIL, IRAVÉ and French Rose Oud. Three 10 ml perfumes.',description:'ILAVEYIL · IRAVÉ · French Rose Oud · 3 × 10 ml'},
-    fresh:{name:'ILAVEYIL',image:'assets/ilaveyil-new.jpg',moodImage:'assets/ilaveyil-new.jpg',moodAlt:'ILAVEYIL perfume in warm morning light',inspiration:'Sweet lime',description:'Sweet-lime freshness that captures the feeling of a new morning.',story:'Sweet-lime freshness that captures the feeling of a new morning.',quote:'Sweet-lime freshness that captures the feeling of a new morning.'},
-    arena:{name:'IRAVÉ',image:'assets/irave-new.jpg',moodImage:'assets/irave-new.jpg',moodAlt:'IRAVÉ perfume in a soft evening glow',inspiration:'Soft sweetness',description:'A soft sweetness that unfolds into warmth as evening settles.',story:'A soft sweetness that unfolds into warmth as evening settles.',quote:'A soft sweetness that unfolds into warmth as evening settles.'},
-    oud:{name:'French Rose Oud',image:'assets/french-rose-oud-new.jpg',moodImage:'assets/french-rose-oud-new.jpg',moodAlt:'French Rose Oud perfume beside a rose and warm oud wood',inspiration:'Rose & oud',description:'Soft rose petals unfolding into the rich warmth of oud.',story:'Soft rose petals unfolding into the rich warmth of oud.',quote:'Soft rose petals unfolding into the rich warmth of oud.'}
+    fresh:{name:'ILAVEYIL',image:'assets/ilaveyil-new.jpg',moodImage:'assets/sweet-lime-exact.webp',moodAlt:'Sweet lime peel and jasmine in golden morning light',inspiration:'Sweet lime',description:'Sweet-lime freshness that captures the feeling of a new morning.',story:'Sweet-lime freshness that captures the feeling of a new morning.',quote:'Sweet-lime freshness that captures the feeling of a new morning.'},
+    arena:{name:'IRAVÉ',image:'assets/irave-new.jpg',moodImage:'assets/mood-irave-exact.webp',moodAlt:'Dark plum with amber syrup and a jasmine blossom',inspiration:'Soft sweetness',description:'A soft sweetness that unfolds into warmth as evening settles.',story:'A soft sweetness that unfolds into warmth as evening settles.',quote:'A soft sweetness that unfolds into warmth as evening settles.'},
+    oud:{name:'French Rose Oud',image:'assets/french-rose-oud-new.jpg',moodImage:'assets/mood-oud-exact.jpg',moodAlt:'A single rose in a wash of soft afternoon light',inspiration:'Rose & oud',description:'Soft rose petals unfolding into the rich warmth of oud.',story:'Soft rose petals unfolding into the rich warmth of oud.',quote:'Soft rose petals unfolding into the rich warmth of oud.'}
   };
   const productDialog=$('#product-dialog'),bagDialog=$('#bag-dialog');
   let bag=[],currentProduct='fresh',currentSize=50,toastTimer,orderMessage='';
@@ -23,25 +23,61 @@
     if(Array.isArray(saved))bag=saved.filter(item=>item&&Object.hasOwn(products,item.id)&&Object.hasOwn(prices,item.size)&&(item.id!=='discovery'||Number(item.size)===30)&&Number.isInteger(item.qty)&&item.qty>0&&item.qty<=99).map(item=>({id:item.id,size:Number(item.size),qty:item.qty}));
   }catch{}
   const itemCount=()=>bag.reduce((sum,item)=>sum+item.qty,0);
-  const itemPrice=item=>item.id==='discovery'?199:prices[item.size];
+  const itemPrice=item=>item.id==='discovery'?299:prices[item.size];
   const itemSizeLabel=item=>item.id==='discovery'?'3 × 10 ml':item.size+' ml';
   const bagTotal=()=>bag.reduce((sum,item)=>sum+itemPrice(item)*item.qty,0);
   let delivery=null,pinRequest=0,pinController=null;
   let promo=null,promoRequest=0;
+
+  // Postal directory adapted from GeoNames (download.geonames.org/export/zip/IN.zip),
+  // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+  function directoryRecords(pin){return null;}
   const pinCache=new Map();
+  function privateSavings(items){
+    return items.reduce((discount,item)=>{
+      const eligible=item.id!=='discovery' && Number(item.size)===50;
+      return discount+(eligible?299*item.qty:0);
+    },0);
+  }
+  function shippingCharge(subtotal,discount,area){
+    return !area || subtotal-discount>=599 ? 0 : area.rate;
+  }
+  function selectedProductRows(){
+    return bag.map(item=>'<div><span>'+products[item.id].name+' · '+itemSizeLabel(item)+(item.qty>1?' × '+item.qty:'')+'</span><span>'+formatPrice(itemPrice(item)*item.qty)+'</span></div>').join('');
+  }
+  function showCheckoutProducts(){
+    const summary=$('#details-summary');
+    summary.replaceChildren();
+    for(const item of bag){
+      const product=products[item.id];
+      const row=document.createElement('article');
+      row.className='checkout-product';
+      const image=document.createElement('img');
+      image.src=product.image;
+      image.alt='';
+      const copy=document.createElement('div');
+      const title=document.createElement('h3');
+      title.textContent=product.name;
+      const size=document.createElement('p');
+      size.textContent=itemSizeLabel(item)+' · Qty '+item.qty;
+      copy.append(title,size);
+      row.append(image,copy);
+      summary.append(row);
+    }
+  }
   function totalsHTML(){
-    const discount=promo?.discount||0;
+    const discount=promo?.privateTier?privateSavings(bag):promo?.discount||0;
     const subtotal=bagTotal();
-    const shipping=delivery?.charge||0;
-    return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
-      (delivery?'<div><span>Shipping</span><span>'+formatPrice(shipping)+'</span></div>':'')+
+    const shipping=shippingCharge(subtotal,discount,delivery);
+    return '<div class="shipping-totals">'+selectedProductRows()+
+      (delivery?'<div><span>Shipping</span><span>'+(shipping?formatPrice(shipping):'Free shipping')+'</span></div>':'')+
       (discount?'<div class="promo-saving"><span>Promo '+promo.code+'</span><span>−'+formatPrice(discount)+'</span></div>':'')+
       '<div class="bag-total"><span>'+(delivery?'Order total':'Subtotal')+'</span><strong>'+formatPrice(subtotal+shipping-discount)+'</strong></div></div>';
   }
   function bagTotalsHTML(){
     // Bag: merchandise only. Delivery is calculated on the final checkout page.
     const subtotal=bagTotal();
-    return '<div class="shipping-totals"><div><span>Perfumes</span><span>'+formatPrice(subtotal)+'</span></div>'+
+    return '<div class="shipping-totals">'+selectedProductRows()+
       '<div class="bag-total"><span>Subtotal</span><strong>'+formatPrice(subtotal)+'</strong></div></div>';
   }
   function renderCheckoutTotals(){$('#checkout-totals').innerHTML=totalsHTML();}
@@ -58,7 +94,7 @@
     delivery=null;refreshDeliveryTotals();$$('[data-check-pin]').forEach(el=>el.disabled=true);pinStatus('Checking your delivery area…');
     const timeout=setTimeout(()=>controller.abort(),15000);
     try{
-      let records=pinCache.get(pin);
+      let records=pinCache.get(pin) || directoryRecords(pin);
       if(!records){const response=await fetch('https://api.postalpincode.in/pincode/'+pin,{signal:controller.signal,referrerPolicy:'no-referrer'});if(!response.ok)throw new Error();records=await response.json();}
       if(request!==pinRequest)return;
       const offices=records?.[0]?.Status==='Success'?records[0].PostOffice:[];
@@ -68,16 +104,9 @@
       pinCache.set(pin,records);
       const state=states[0],normalizedState=state.replace(/[^a-z]/gi,'').toLowerCase();
       const tamilNadu=normalizedState==='tamilnadu';
-      const districts=[...new Set(usable.map(o=>String(o.District||'').replace(/[^a-z]/gi,'').toLowerCase()).filter(Boolean))];
-      if(tamilNadu&&!districts.length){
-        pinStatus('We could not verify the delivery district. Please try again.');return;
-      }
-      const nearby=new Set(['chengalpattu','kanchipuram','kancheepuram','tiruvallur','thiruvallur']);
-      const charge=!tamilNadu?149:districts.includes('chennai')?59:
-        districts.some(d=>nearby.has(d))?79:99;
-      delivery={pin,state,district:districts[0]||'',charge};
+      delivery={pin,state,rate:tamilNadu?59:99};
       pinStatus('Delivery available to this PIN code.');refreshDeliveryTotals();
-    }catch{if(request===pinRequest)pinStatus('Unable to check availability right now. Please try again.');}
+    }catch{if(request===pinRequest)pinStatus('This PIN is missing from the saved directory, and the online lookup is unavailable. Check the PIN or try again later.');}
     finally{clearTimeout(timeout);if(request===pinRequest)$$('[data-check-pin]').forEach(el=>el.disabled=false);}
   }));
   // Promo codes are checked against the private sheet by a server-side Vercel function.
@@ -95,6 +124,14 @@
       if(!bag.length){promoStatus.textContent='Choose a fragrance before applying a code.';return;}
       const request=++promoRequest;promoButton.disabled=true;promoStatus.textContent='Checking your code…';
       try{
+        const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code));
+        if(request!==promoRequest)return;
+        if(Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('')==='e9addaa26ad6fc1d39549038b62beb902acc8e690fb4e8bc021c533dca1e4326'){
+          const savings=privateSavings(bag);
+          promo=savings?{code,privateTier:true}:null;
+          promoStatus.textContent=savings?'Coupon applied, '+formatPrice(savings)+' discount':'Coupon valid on select products only.';
+          renderCheckoutTotals();return;
+        }
         const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&subtotal='+bagTotal(),{cache:'no-store'});
         const data=await result.json();
         if(request!==promoRequest)return;
@@ -112,7 +149,7 @@
     $$('[data-bag-count]').forEach(el=>{el.textContent=itemCount();el.hidden=!itemCount()});
     $$('[data-open-bag]').forEach(el=>el.setAttribute('aria-label','Reserve your bottle, '+itemCount()+' items in your bag'));
   }
-  function saveBag(){try{localStorage.setItem('ra-presence-selection',JSON.stringify(bag))}catch{}updateCount()}
+  function saveBag(){promo=null;promoRequest++;promoInput.value='';promoStatus.textContent='';promoButton.disabled=false;try{localStorage.setItem('ra-presence-selection',JSON.stringify(bag))}catch{}updateCount()}
   function showToast(message){const el=$('.toast');el.textContent=message;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),2500)}
   function openDialog(dialog,origin=document.activeElement){focusOrigins.set(dialog,origin);dialog.showModal();dialog.scrollTop=0}
   $$('dialog').forEach(dialog=>{
@@ -120,7 +157,7 @@
     dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()});
   });
   $$('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
-  function setSize(size){currentSize=Number(size);$$('.size-option').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.size)===currentSize)));$('#product-price').textContent=formatPrice(prices[currentSize]);$('#product-original').textContent=formatPrice(originalPrices[currentSize]);$('#product-size-caption').textContent=currentSize+' ml'}
+  function setSize(size){currentSize=Number(size);$$('.size-option').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.size)===currentSize)));$('#product-price').textContent=formatPrice(prices[currentSize]);$('#product-original').textContent=formatPrice(originalPrices[currentSize]);$('#product-size-caption').textContent=currentSize+' ml'+(prices[currentSize]>=599?' · Free shipping':'')}
   function showProduct(id){
     const product=products[id];if(!product)return;
     currentProduct=id;
@@ -138,12 +175,12 @@
     if(isSet){
       currentSize=30;
       $('#product-original').textContent=formatPrice(399);
-      $('#product-price').textContent=formatPrice(199);
+      $('#product-price').textContent=formatPrice(299);
       $('#product-size-caption').textContent='3 × 10 ml';
     }else setSize(50);
     if(!shop)openDialog(productDialog);
   }
-  document.addEventListener('click',event=>{const button=event.target.closest('[data-product]');if(button)location.href='the-scent.html?scent='+button.dataset.product});
+  document.addEventListener('click',event=>{const button=event.target.closest('[data-product]');if(button)location.hash='scent-'+button.dataset.product});
   $$('.size-option').forEach(button=>button.addEventListener('click',()=>setSize(button.dataset.size)));
   function addBottle(id, size, origin) {
     const item = bag.find(entry => entry.id === id && entry.size === size);
@@ -165,17 +202,17 @@
   function setStep(step,focus=true){
     ['bag','details'].forEach(name=>{const panel=bagDialog.querySelector('#'+name+'-step');if(panel)panel.hidden=name!==step;});
     const heading=step==='bag'?'bag-title':'details-title';
-    bagDialog.setAttribute('aria-labelledby',heading);bagDialog.scrollTop=0;
+    bagDialog.classList.toggle('checkout-view',step==='details');bagDialog.setAttribute('aria-labelledby',heading);bagDialog.scrollTop=0;
     if(focus)$('#'+heading).focus({preventScroll:true});
   }
   function renderBag(){
     const items=$('#bag-items'),summary=$('#bag-summary');items.replaceChildren();summary.replaceChildren();
     if(!bag.length){
       const text=document.createElement('p');text.className='empty-bag';text.textContent='Some encounters begin with curiosity. Find the scent you want to know closer.';items.append(text);
-      const button=document.createElement('button');button.className='primary-button';button.innerHTML='Explore the collection '+bottleControl;button.addEventListener('click',()=>{bagDialog.close();if(shop){location.href='the-scent.html';return}$('#collection').scrollIntoView({behavior:reduce.matches?'auto':'smooth'})});summary.append(button);return;
+      const button=document.createElement('button');button.className='primary-button';button.innerHTML='Explore the collection '+bottleControl;button.addEventListener('click',()=>{bagDialog.close();if(shop){location.hash='catalog';return}$('#collection').scrollIntoView({behavior:reduce.matches?'auto':'smooth'})});summary.append(button);return;
     }
     bag.forEach((item,index)=>{
-      const product=products[item.id],row=document.createElement('div');row.className='bag-item';
+      const product=products[item.id],row=document.createElement('div');row.className='bag-item';row.dataset.productId=item.id;
       // Only closed, validated catalogue values are interpolated. Customer text uses textContent.
       row.innerHTML='<img src="'+product.image+'" alt="'+product.name+' perfume" width="112" height="142"><div><h3>'+product.name+'</h3><small>'+itemSizeLabel(item)+' · Eau de parfum</small><div class="quantity-controls"><button aria-label="Reduce '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="-1">−</button><span aria-label="Quantity">'+item.qty+'</span><button aria-label="Increase '+product.name+' '+itemSizeLabel(item)+' quantity" data-adjust="1"'+(item.qty===99?' disabled':'')+'>+</button></div></div><div class="item-end"><span class="item-price">'+formatPrice(itemPrice(item)*item.qty)+'</span><button class="remove-item" aria-label="Remove '+product.name+' '+itemSizeLabel(item)+'">Remove</button></div>';
       $$('[data-adjust]',row).forEach(button=>button.addEventListener('click',()=>{const label=button.getAttribute('aria-label');item.qty=Math.max(0,Math.min(99,item.qty+Number(button.dataset.adjust)));if(!item.qty)bag.splice(index,1);saveBag();renderBag();const next=$$('button',items).find(el=>el.getAttribute('aria-label')===label);if(next&&!next.disabled)next.focus({preventScroll:true})}));
@@ -183,19 +220,23 @@
     });
     summary.innerHTML=bagTotalsHTML()+'<button class="primary-button" id="continue-details">Continue '+bottleControl+'</button><p class="order-note">A little closer to your signature.</p>';
     $('#continue-details').addEventListener('click',()=>{
-      const pin = delivery ? '?pin=' + delivery.pin : '';
-      location.href = (phoneAuth.enabled ? 'login.html' : 'checkout.html') + pin;
+      showCheckoutProducts();
+      renderCheckoutTotals();
+      setStep('details');
+
     });
   }
-  function openBag(origin=document.activeElement){renderBag();setStep('bag',false);openDialog(bagDialog,origin)}
+  let bagScroll=0;
+  bagDialog.addEventListener('close',()=>{document.documentElement.classList.remove('bag-open');window.scrollTo({top:bagScroll,behavior:'instant'});});
+  function openBag(origin=document.activeElement){bagScroll=window.scrollY;document.documentElement.classList.add('bag-open');renderBag();setStep('bag',false);openDialog(bagDialog,origin)}
   $$('[data-open-bag]').forEach(button=>button.addEventListener('click',()=>openBag(button)));
-  $('#back-to-bag').addEventListener('click',()=>openBag());
+  $('#back-to-bag').addEventListener('click',()=>{renderBag();setStep('bag')});
 
   const nameInput=$('#customer-name'),mobileInput=$('#customer-mobile'),emailInput=$('#customer-email');
   let verifiedPhone = '';
   if ($('#order-details')) {
     if (!bag.length) location.replace('the-scent.html');
-    $('#details-summary').textContent = bag.map(item => products[item.id].name + ' · ' + itemSizeLabel(item) + ' × ' + item.qty).join(' / ');
+    showCheckoutProducts();
     renderCheckoutTotals();
     const pin = new URLSearchParams(location.search).get('pin');
     if (/^[1-9]\d{5}$/.test(pin)) {
@@ -272,16 +313,28 @@
     }
   });
 
-  function setMood(id){const product=products[id];$('.scent-secret').open=false;$$('.mood-tab').forEach(tab=>{const active=tab.dataset.mood===id;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});const image=$('#mood-image');image.src=product.moodImage;image.alt=product.moodAlt;$('#mood-caption').textContent=product.name+' / '+product.inspiration;$('.mood-description').textContent=product.description;$('.mood-quote').replaceChildren(...product.quote.split('\n').flatMap((line,index)=>index?[document.createElement('br'),document.createTextNode(line)]:[document.createTextNode(line)]));$('.mood-link').dataset.product=id;$('.mood-link>span').textContent='Meet '+product.name;$('#mood-panel').setAttribute('aria-labelledby','mood-'+id)}
+  function setMood(id){const product=products[id];$$('.mood-tab').forEach(tab=>{const active=tab.dataset.mood===id;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});const image=$('#mood-image');image.src=product.moodImage;image.alt=product.moodAlt;$('#mood-caption').textContent=product.name+' / '+product.inspiration;$('.mood-quote').replaceChildren(...product.quote.split('\n').flatMap((line,index)=>index?[document.createElement('br'),document.createTextNode(line)]:[document.createTextNode(line)]));$('.mood-link').dataset.product=id;$('.mood-link>span').textContent='Meet '+product.name;$('#mood-panel').setAttribute('aria-labelledby','mood-'+id)}
   $$('.mood-tab').forEach((tab,index)=>{tab.addEventListener('click',()=>setMood(tab.dataset.mood));tab.addEventListener('keydown',event=>{const tabs=$$('.mood-tab');let next;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();setMood(tabs[next].dataset.mood);tabs[next].focus()})});
 
   const shop = document.querySelector('.scent-shop');
-  if (shop && ['fresh','arena','oud','discovery'].includes(new URLSearchParams(location.search).get('scent'))) {
-    $('.catalog').hidden = true;
-    shop.hidden = false;
-    $('.skip').href = '#fragrance-detail';
-    showProduct(new URLSearchParams(location.search).get('scent'));
+  function route(){
+    const key=location.hash.slice(1);
+    const id=key.startsWith('scent-')?key.slice(6):'';
+    const detail=Object.hasOwn(products,id);
+    const catalog=key==='catalog';
+    const home=document.querySelector('main#main');
+    home.hidden=detail||catalog;
+    document.getElementById('closing').hidden=home.hidden;
+    document.querySelector('.catalog').hidden=!catalog;
+    shop.hidden=!detail;
+    document.body.classList.toggle('inner-page',detail||catalog);
+    $('.skip').href=detail?'#fragrance-detail':catalog?'#catalog':'#main';
+    if(detail)showProduct(id);
+    if(detail||catalog)window.scrollTo({top:0,behavior:'instant'});
+    else if(key)document.getElementById(key)?.scrollIntoView({behavior:'instant'});
   }
+  window.addEventListener('hashchange',route);
+  route();
   const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.08});
   if(!reduce.matches)document.body.classList.add('js-motion');$$('.reveal').forEach(el=>observer.observe(el));
   reduce.addEventListener('change',event=>{document.body.classList.toggle('js-motion',!event.matches);if(event.matches)$$('.reveal').forEach(el=>el.classList.add('in'))});

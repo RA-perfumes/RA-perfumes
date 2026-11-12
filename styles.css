@@ -570,20 +570,47 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 #customer-mobile[aria-invalid="true"]{border-color:#c68186}
 
 
-/* RA Collection Box Fit — approved uploaded HTML, 12 Nov 2026 */
-/* Match the two box slides to their existing frames without changing the carousel or captions. */
-#box-showcase .box-gallery-slide .box-gallery-visual {
-  position: relative;
-  align-self: stretch;
-  width: 100%;
-  max-width: none;
-  padding: 0 !important;
-}
-#box-showcase .box-gallery-slide .box-gallery-visual img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover !important;
-  object-position: center !important;
-}
+@media(prefers-reduced-motion:no-preference){.film-frame>#scrub-video{opacity:1}}button[hidden]{display:none!important}
+
+
+main[hidden]{display:none!important}
+html.bag-open{overflow:hidden;scrollbar-gutter:stable}
+.presentation-photo{aspect-ratio:3/2;align-self:center;margin:0;display:grid;place-items:center;border:1px solid #d9bd8040}
+.presentation-photo img{position:static;display:block;width:100%;height:100%;max-width:100%;object-fit:contain;object-position:center}
+#diwali-gallery{width:min(100%,620px);height:auto;aspect-ratio:1;border:0;justify-self:center;margin-inline:auto}
+#diwali-gallery .diwali-gallery-slide{padding:0}
+#diwali-gallery img{object-fit:cover;object-position:center}
+.return-link{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+.return-link:hover,.return-link:focus-visible{text-decoration:underline;text-underline-offset:4px}
+.bag-dialog.checkout-view{inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0}
+.checkout-view .bag-content{width:min(100%,680px);margin:auto}
+.checkout-view .dialog-top{display:none}
+.scent-shop .product-art.is-discovery #product-image{display:block!important}
+
+
+.ritual-art{align-self:center;width:100%;min-height:0;aspect-ratio:1}
+
+.house-card h3{display:flex;align-items:baseline;justify-content:center;gap:.18em;padding-inline:8px;box-sizing:border-box;height:1.3em;white-space:nowrap;line-height:1.3}
+.house-card .bottle-volume{flex:none}
+.house-card .fragrance-name{min-width:0}
+.house-card button{margin-inline:auto}
+.house-card small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mood-panel>.mood-quote{margin:24px 0}
+
+
+.bag-item[data-product-id="discovery"]{grid-template-columns:clamp(108px,32%,184px) minmax(0,1fr)}
+.bag-item[data-product-id="discovery"]>img{width:100%;height:auto;aspect-ratio:auto;align-self:start;background:transparent;border:0}
+
+
+
+#details-title{margin:1.2rem 0 .6rem;color:var(--muted);font:inherit}
+#details-summary{display:grid;gap:18px;margin:0 0 28px;padding:18px 0;border-block:1px solid var(--line)}
+.checkout-product{display:grid;grid-template-columns:minmax(94px,34%) minmax(0,1fr);gap:clamp(14px,3vw,30px);align-items:center}
+.checkout-product img{display:block;width:100%;height:auto}
+.checkout-product h3{font:normal clamp(27px,4vw,46px)/1.06 Editorial,Georgia,serif;color:var(--ink);margin:0 0 10px;overflow-wrap:break-word}
+.checkout-product p{font-size:13px;color:var(--muted);margin:0}
+
+
+.catalog-home-arrow{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;color:var(--gold);font:normal 20px/1 Arial,sans-serif;text-decoration:none}.catalog-home-arrow:focus-visible{outline:1px solid currentColor;outline-offset:-2px}
+
+#box-showcase .box-gallery-slide .box-gallery-visual{position:relative;align-self:stretch;width:100%;max-width:none;padding:0!important}#box-showcase .box-gallery-slide .box-gallery-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover!important;object-position:center!important}

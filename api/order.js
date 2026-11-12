@@ -1,6 +1,7 @@
 // RA Perfumes order receiver — server-side bridge to Google Apps Script.
+import {createHash} from 'node:crypto';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
-const PRICES = {30:399,50:599,100:1299};
+const PRICES = {30:499,50:799,100:1499};
 const NAMES = {fresh:'ILAVEYIL',arena:'IRAVÉ',oud:'French Rose Oud',discovery:'Discovery Set (ILAVEYIL, IRAVÉ, French Rose Oud)'};
 const validText = (v,max) => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= max;
 export default async function handler(req,res){
@@ -21,7 +22,7 @@ export default async function handler(req,res){
       if(!Object.hasOwn(NAMES,item.id) || !Object.hasOwn(PRICES,size) || (item.id==='discovery'&&size!==30) || !Number.isInteger(qty) || qty<1 || qty>99){
         return res.status(400).json({success:false,error:'Invalid fragrance selection'});
       }
-      subtotal += (item.id==='discovery'?199:PRICES[size])*qty;
+      subtotal += (item.id==='discovery'?299:PRICES[size])*qty;
       lines.push(NAMES[item.id]+' '+(item.id==='discovery'?'3 x 10ml':size+'ml')+' x '+qty);
     }
     if(subtotal>1000000)return res.status(400).json({success:false,error:'Order amount too high'});
@@ -34,16 +35,14 @@ export default async function handler(req,res){
     const states=[...new Set(offices.map(o=>o.State.trim()))];
     if(states.length!==1)return res.status(400).json({success:false,error:'Unable to verify PIN code'});
     const tamilNadu=states[0].replace(/[^a-z]/gi,'').toLowerCase()==='tamilnadu';
-    const districts=[...new Set(offices.map(o=>String(o.District||'').replace(/[^a-z]/gi,'').toLowerCase()).filter(Boolean))];
-    if(tamilNadu&&!districts.length)
-      return res.status(400).json({success:false,error:'Unable to verify delivery district'});
-    const nearby=new Set(['chengalpattu','kanchipuram','kancheepuram','tiruvallur','thiruvallur']);
-    const shipping=!tamilNadu?149:districts.includes('chennai')?59:
-      districts.some(d=>nearby.has(d))?79:99;
     let promoCode='',discount=0;
     if(d.promoCode){
       promoCode=String(d.promoCode).trim().toUpperCase();
       if(!/^[A-Z0-9_-]{3,32}$/.test(promoCode))return res.status(400).json({success:false,error:'Promo code is not valid'});
+      if(createHash('sha256').update(promoCode).digest('hex')==='e9addaa26ad6fc1d39549038b62beb902acc8e690fb4e8bc021c533dca1e4326'){
+        discount=d.items.reduce((sum,item)=>sum+(item.id!=='discovery'&&Number(item.size)===50?299*Number(item.qty):0),0);
+        if(!discount)return res.status(400).json({success:false,error:'Coupon valid on select products only'});
+      }else{
       const validateUrl=new URL(SHEETS_URL);
       validateUrl.searchParams.set('action','validatePromo');
       validateUrl.searchParams.set('code',promoCode);
@@ -55,7 +54,10 @@ export default async function handler(req,res){
       if(!verified.valid)return res.status(400).json({success:false,error:verified.message||'Promo code is not valid'});
       discount=Number(verified.discount);
       if(verified.code!==promoCode||!Number.isFinite(discount)||discount<=0||discount>subtotal)throw Error('Invalid promo discount');
+      }
     }
+    // Match the exact uploaded storefront: free shipping from ₹599 net; smaller orders ₹59 in Tamil Nadu, ₹99 elsewhere.
+    const shipping = subtotal-discount>=599 ? 0 : (tamilNadu?59:99);
     const payload={
       name:d.name.trim(),email:d.email.trim(),mobile:d.mobile.trim(),
       orderId:d.orderId.trim(),pincode:String(d.pincode),items:lines.join('; '),
