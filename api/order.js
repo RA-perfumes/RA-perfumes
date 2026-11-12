@@ -2,7 +2,7 @@
 import {createRequire} from 'node:module';
 const postalStates=createRequire(import.meta.url)('../assets/postal-states.json');
 import {createHash} from 'node:crypto';
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
+const SHEETS_URL = process.env.RA_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 const PRICES = {30:499,50:799,100:1499};
 const NAMES = {fresh:'ILAVEYIL',arena:'IRAVÉ',oud:'French Rose Oud',discovery:'Discovery Set (ILAVEYIL, IRAVÉ, French Rose Oud)'};
 const validText = (v,max) => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= max;
@@ -71,7 +71,7 @@ export default async function handler(req,res){
     };
     const response=await fetch(SHEETS_URL,{
       method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(payload),redirect:'follow',signal:AbortSignal.timeout(14000)
+      body:JSON.stringify(process.env.RA_SHEETS_URL && process.env.RA_SHEETS_KEY ? {...payload,connectionKey:process.env.RA_SHEETS_KEY} : payload),redirect:'follow',signal:AbortSignal.timeout(14000)
     });
     const raw=await response.text();
     let outcome;

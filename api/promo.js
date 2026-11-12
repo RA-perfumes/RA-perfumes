@@ -1,5 +1,5 @@
 // Validate promo codes on the server against the private RA Perfumes Google Sheet.
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
+const SHEETS_URL=process.env.RA_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
   if(req.method!=='GET'){res.setHeader('Allow','GET');return res.status(405).json({success:false,error:'Method not allowed'});}
