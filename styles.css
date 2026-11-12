@@ -568,3 +568,22 @@ html{scroll-padding-top:130px}.site-header{position:fixed;background:#1a1019eb;b
 }
 .mobile-error[hidden]{display:none!important}
 #customer-mobile[aria-invalid="true"]{border-color:#c68186}
+
+
+/* RA Collection Box Fit — approved uploaded HTML, 12 Nov 2026 */
+/* Match the two box slides to their existing frames without changing the carousel or captions. */
+#box-showcase .box-gallery-slide .box-gallery-visual {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  padding: 0 !important;
+}
+#box-showcase .box-gallery-slide .box-gallery-visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  object-position: center !important;
+}
