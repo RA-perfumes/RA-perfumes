@@ -1,12 +1,11 @@
 // RA Perfumes order receiver — server-side bridge to Google Apps Script.
-import {createRequire} from 'node:module';
-const postalStates=createRequire(import.meta.url)('../assets/postal-states.json');
-import {createHash} from 'node:crypto';
+const postalStates = require('../assets/postal-states.json');
+const {createHash} = require('node:crypto');
 const SHEETS_URL = process.env.RA_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 const PRICES = {30:499,50:799,100:1499};
 const NAMES = {fresh:'ILAVEYIL',arena:'IRAVÉ',oud:'French Rose Oud',discovery:'Discovery Set (ILAVEYIL, IRAVÉ, French Rose Oud)'};
 const validText = (v,max) => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= max;
-export default async function handler(req,res){
+module.exports = async function handler(req,res){
   if(req.method!=='POST'){res.setHeader('Allow','POST');return res.status(405).json({success:false,error:'Method not allowed'});}
   res.setHeader('Cache-Control','no-store');
   try {
