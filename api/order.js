@@ -1,6 +1,5 @@
 // RA Perfumes order receiver — server-side bridge to Google Apps Script.
 const postalStates = require('../assets/postal-states.json');
-const {createHash} = require('node:crypto');
 const SHEETS_URL = process.env.RA_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbzS2llzW9tvzHaODte9uC1w0H494bDfQ7w2CXfnXjPLEDlPA_SJCXooLb2z9cNf2hSlJw/exec';
 const PRICES = {30:499,50:799,100:1499};
 const NAMES = {fresh:'ILAVEYIL',arena:'IRAVÉ',oud:'French Rose Oud',discovery:'Discovery Set (ILAVEYIL, IRAVÉ, French Rose Oud)'};
@@ -44,22 +43,22 @@ module.exports = async function handler(req,res){
     if(d.promoCode){
       promoCode=String(d.promoCode).trim().toUpperCase();
       if(!/^[A-Z0-9_-]{3,32}$/.test(promoCode))return res.status(400).json({success:false,error:'Promo code is not valid'});
-      if(createHash('sha256').update(promoCode).digest('hex')==='e9addaa26ad6fc1d39549038b62beb902acc8e690fb4e8bc021c533dca1e4326'){
-        discount=d.items.reduce((sum,item)=>sum+(item.id!=='discovery'&&Number(item.size)===50?299*Number(item.qty):0),0);
-        if(!discount)return res.status(400).json({success:false,error:'Coupon valid on select products only'});
-      }else{
+      const eligibleQty=d.items.reduce((sum,item)=>sum+(item.id!=='discovery'&&Number(item.size)===50?Number(item.qty):0),0);
+      if(!eligibleQty)return res.status(400).json({success:false,error:'Coupon valid on 50 ml bottles only'});
+      if(!process.env.RA_SHEETS_URL)throw Error('Promo service is not configured');
       const validateUrl=new URL(SHEETS_URL);
       validateUrl.searchParams.set('action','validatePromo');
       validateUrl.searchParams.set('code',promoCode);
-      validateUrl.searchParams.set('subtotal',String(subtotal));
+      validateUrl.searchParams.set('subtotal','799');
       const verification=await fetch(validateUrl,{redirect:'follow',signal:AbortSignal.timeout(13000)});
       if(!verification.ok)throw Error('Promo service unavailable');
       const verified=await verification.json();
       if(verified.success!==true||typeof verified.valid!=='boolean')throw Error('Promo receiver not updated');
       if(!verified.valid)return res.status(400).json({success:false,error:verified.message||'Promo code is not valid'});
-      discount=Number(verified.discount);
-      if(verified.code!==promoCode||!Number.isFinite(discount)||discount<=0||discount>subtotal)throw Error('Invalid promo discount');
-      }
+      const rate=Number(verified.discount);
+      if(verified.code!==promoCode||!Number.isInteger(rate)||rate<=0||rate>799)throw Error('Invalid promo discount');
+      discount=rate*eligibleQty;
+      if(discount>subtotal)throw Error('Discount exceeds subtotal');
     }
     // Match the exact uploaded storefront: free shipping from ₹599 net; smaller orders ₹59 in Tamil Nadu, ₹99 elsewhere.
     const shipping = subtotal-discount>=599 ? 0 : (tamilNadu?59:99);

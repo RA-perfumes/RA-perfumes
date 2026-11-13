@@ -74,7 +74,7 @@
     }
   }
   function totalsHTML(){
-    const discount=promo?.privateTier?privateSavings(bag):promo?.discount||0;
+    const discount=promo?.discount||0;
     const subtotal=bagTotal();
     const shipping=shippingCharge(subtotal,discount,delivery);
     return '<div class="shipping-totals">'+selectedProductRows()+
@@ -132,22 +132,16 @@
       if(!bag.length){promoStatus.textContent='Choose a fragrance before applying a code.';return;}
       const request=++promoRequest;promoButton.disabled=true;promoStatus.textContent='Checking your code…';
       try{
-        const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code));
-        if(request!==promoRequest)return;
-        if(Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('')==='e9addaa26ad6fc1d39549038b62beb902acc8e690fb4e8bc021c533dca1e4326'){
-          const savings=privateSavings(bag);
-          promo=savings?{code,privateTier:true}:null;
-          promoStatus.textContent=savings?'Coupon applied, '+formatPrice(savings)+' discount':'Coupon valid on select products only.';
-          renderCheckoutTotals();return;
-        }
-        const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&subtotal='+bagTotal(),{cache:'no-store'});
+        const eligibleQty=bag.reduce((sum,item)=>sum+(item.id!=='discovery'&&Number(item.size)===50?item.qty:0),0);
+        if(!eligibleQty){promo=null;promoStatus.textContent='Coupon valid on 50 ml bottles only.';renderCheckoutTotals();return;}
+        const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&qty='+eligibleQty,{cache:'no-store'});
         const data=await result.json();
         if(request!==promoRequest)return;
         if(!result.ok||data.success!==true){promoStatus.textContent='Promo verification is temporarily unavailable. Please try again.';return;}
         if(!data.valid){promoStatus.textContent=data.message||'Promo code is not valid.';return;}
         if(data.code!==code||!Number.isFinite(data.discount)||data.discount<=0||data.discount>bagTotal())throw Error('Invalid response');
         promo={code,discount:data.discount};
-        promoStatus.textContent='Code applied. You save '+formatPrice(data.discount)+'.';
+        promoStatus.textContent='Coupon applied, '+formatPrice(data.discount)+' discount.';
         renderCheckoutTotals();
       }catch{if(request===promoRequest)promoStatus.textContent='Unable to check your code right now. Please try again.';}
       finally{if(request===promoRequest)promoButton.disabled=false;}
