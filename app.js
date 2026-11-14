@@ -128,22 +128,19 @@
     promoInput.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();promoButton.click();}});
     promoButton.addEventListener('click',async()=>{
       const code=promoInput.value.trim().toUpperCase();
-      if(!/^[A-Z0-9_-]{3,32}$/.test(code)){promoStatus.textContent='Promo code is not valid.';return;}
-      if(!bag.length){promoStatus.textContent='Choose a fragrance before applying a code.';return;}
-      const request=++promoRequest;promoButton.disabled=true;promoStatus.textContent='Checking your code…';
+      if(!/^[A-Z0-9_-]{3,32}$/.test(code)||!bag.length){promo=null;promoStatus.textContent='Code invalid';renderCheckoutTotals();return;}
+      const request=++promoRequest;promoButton.disabled=true;promoStatus.textContent='';
       try{
-        const eligibleQty=bag.reduce((sum,item)=>sum+(item.id!=='discovery'&&Number(item.size)===50?item.qty:0),0);
-        if(!eligibleQty){promo=null;promoStatus.textContent='Coupon valid on 50 ml bottles only.';renderCheckoutTotals();return;}
-        const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&qty='+eligibleQty,{cache:'no-store'});
+        const result=await fetch('/api/promo?code='+encodeURIComponent(code)+'&cart='+encodeURIComponent(JSON.stringify(bag)),{cache:'no-store'});
         const data=await result.json();
         if(request!==promoRequest)return;
-        if(!result.ok||data.success!==true){promoStatus.textContent='Promo verification is temporarily unavailable. Please try again.';return;}
-        if(!data.valid){promoStatus.textContent=data.message||'Promo code is not valid.';return;}
-        if(data.code!==code||!Number.isFinite(data.discount)||data.discount<=0||data.discount>bagTotal())throw Error('Invalid response');
+        if(!result.ok||data.success!==true){promo=null;promoStatus.textContent='Code invalid';renderCheckoutTotals();return;}
+        if(!data.valid){promo=null;promoStatus.textContent=data.status==='expired'?'Code expired/no longer available':'Code invalid';renderCheckoutTotals();return;}
+        if(data.code!==code||!Number.isSafeInteger(data.discount)||data.discount<=0||data.discount>bagTotal())throw Error('Invalid coupon response');
         promo={code,discount:data.discount};
-        promoStatus.textContent='Coupon applied, '+formatPrice(data.discount)+' discount.';
+        promoStatus.textContent='Code applied';
         renderCheckoutTotals();
-      }catch{if(request===promoRequest)promoStatus.textContent='Unable to check your code right now. Please try again.';}
+      }catch{if(request===promoRequest){promo=null;promoStatus.textContent='Code invalid';renderCheckoutTotals();}}
       finally{if(request===promoRequest)promoButton.disabled=false;}
     });
   }
@@ -299,7 +296,10 @@
       });
       const saved=await result.json();
       const serialAssigned=/^20\d{8}$/.test(String(saved.orderId||'')) && saved.requestId===orderId;
-      if(!result.ok||saved.success!==true||!(saved.orderId===orderId||serialAssigned))throw Error(saved.error||'Order not saved');
+      if(!result.ok||saved.success!==true||!(saved.orderId===orderId||serialAssigned)){
+        if(saved.couponStatus){promo=null;promoStatus.textContent=saved.couponStatus==='expired'?'Code expired/no longer available':'Code invalid';renderCheckoutTotals();}
+        throw Error(saved.error||'Order not saved');
+      }
       const confirmedOrderId=serialAssigned?saved.orderId:orderId;
       orderMessage='Hello RA Perfumes, I would like to order:\n\n'+
         bag.map(item=>products[item.id].name+' · '+itemSizeLabel(item)+' × '+item.qty+'\n'+formatPrice(itemPrice(item)*item.qty)).join('\n\n')+
